@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from "../utlis/tokenGenerator.js";
+} from "../utlis/tokenGenerator.js"; 
 
 export const Login = async (req, res, next) => {
   let { email, password } = req.body;
