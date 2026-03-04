@@ -22,6 +22,9 @@
 import express from "express";
 import dotenv from "dotenv";
 import dbConnection from "./src/config/db.js";
+import appointmentRoutes from "./src/modeuls/documents/documentRoutes/appointmentLetterRoutes.js";
+import userRoutes from "./src/user/user.routes.js";
+import adminRoutes from "./src/admin/admin.router.js";
 
 const app = express();
 

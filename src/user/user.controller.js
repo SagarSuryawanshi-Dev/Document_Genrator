@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from "../utlis/tokenGenerator.js";
+} from "../utlis/tokenGenerator.js"; 
 
 
 
