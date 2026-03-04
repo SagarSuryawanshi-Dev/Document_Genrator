@@ -31,7 +31,58 @@
 
 
 
-  import mongoose from "mongoose";
+//   import mongoose from "mongoose";
+
+// const options = {
+//   discriminatorKey: "documentType",
+//   timestamps: true,
+// };
+
+// const baseDocumentSchema = new mongoose.Schema(
+//   {
+//     company: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "Company",
+//       required: true,
+//     },
+
+//     issuedTo: {
+//       type: String,
+//       required: true,
+//       trim: true,
+//     },
+
+//     // 🔥 FIX FOR DUPLICATE KEY ERROR
+//     documentNumber: {
+//       type: String,
+//       trim: true,
+//     },
+//   },
+//   options
+// );
+
+// // 🔐 UNIQUE ONLY WHEN VALUE EXISTS
+// baseDocumentSchema.index(
+//   { documentNumber: 1 },
+//   {
+//     unique: true,
+//     partialFilterExpression: {
+//       documentNumber: { $exists: true, $ne: null },
+//     },
+//   }
+// );
+
+// export default mongoose.model("Document", baseDocumentSchema);
+
+
+
+
+
+
+
+
+
+import mongoose from "mongoose";
 
 const options = {
   discriminatorKey: "documentType",
@@ -41,9 +92,21 @@ const options = {
 const baseDocumentSchema = new mongoose.Schema(
   {
     company: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
+      type: String,
       required: true,
+      trim: true,
+      enum: [
+        "Nimbja Security Solutions Pvt. Ltd.",
+        "Smart Software Services Pvt. Ltd.",
+        "SmartMatrix Digital Services Pvt. Ltd.",
+        "Devcons Software Solutions Pvt. Ltd.",
+        "Penta Software Consultancy Services Pvt. Ltd.",
+        "Cubeage Technologies Services Pvt. Ltd.",
+        "Quick Management Service Pvt. Ltd.",
+        "Neweage Cloud Solution Pvt. Ltd.",
+        "RP Business Solutions LLP",
+        "JDIT Software Solutions Pvt. Ltd.",
+      ],
     },
 
     issuedTo: {
@@ -52,7 +115,6 @@ const baseDocumentSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // 🔥 FIX FOR DUPLICATE KEY ERROR
     documentNumber: {
       type: String,
       trim: true,
@@ -61,7 +123,7 @@ const baseDocumentSchema = new mongoose.Schema(
   options
 );
 
-// 🔐 UNIQUE ONLY WHEN VALUE EXISTS
+// 🔐 UNIQUE documentNumber ONLY when exists
 baseDocumentSchema.index(
   { documentNumber: 1 },
   {
