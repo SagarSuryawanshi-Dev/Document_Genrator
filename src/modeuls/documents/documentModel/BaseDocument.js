@@ -88,7 +88,7 @@ const options = {
   discriminatorKey: "documentType",
   timestamps: true,
 };
-
+  
 const baseDocumentSchema = new mongoose.Schema(
   {
     company: {
