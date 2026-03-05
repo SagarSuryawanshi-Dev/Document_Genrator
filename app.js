@@ -6,6 +6,7 @@ import appointmentRoutes from "./src/modeuls/documents/documentRoutes/appointmen
 import userRoutes from "./src/user/user.routes.js";
 import adminRoutes from "./src/admin/admin.router.js";
 import offerLetterRoutes from "./src/modeuls/documents/documentRoutes/offerLetterRoutes.js";
+import experienceLetterRoutes from "./src/modeuls/documents/documentRoutes/experienceLetterRoutes.js";
 
 const app = express();
 
@@ -18,6 +19,7 @@ dbConnection();
 /* ================= ROUTES ================= */
 app.use("/api/appointment-letter", appointmentRoutes);
 app.use("/api/offer-letter", offerLetterRoutes);
+app.use("/api/experience-letter", experienceLetterRoutes);
 
 // Routes
 app.use("/api/v1/users", userRoutes);
