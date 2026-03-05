@@ -9,6 +9,7 @@ import offerLetterRoutes from "./src/modeuls/documents/documentRoutes/offerLette
 import experienceLetterRoutes from "./src/modeuls/documents/documentRoutes/experienceLetterRoutes.js";
 import fullAndFinalRoutes from "./src/modeuls/documents/documentRoutes/fullAndFinalRoutes.js";
 import confirmationLetterRoutes from "./src/modeuls/documents/documentRoutes/confirmationLetterRoutes.js";
+import completionCertificateRoutes from "./src/modeuls/documents/documentRoutes/completionCertificateRoutes.js";
 const app = express();
 
 app.use(express.json());
@@ -23,7 +24,7 @@ app.use("/api/v1/offer-letter", offerLetterRoutes);
 app.use("/api/v1/experience-letter", experienceLetterRoutes);
 app.use("/api/v1/fnf", fullAndFinalRoutes);
 app.use("/api/confirmation-letter", confirmationLetterRoutes);
-
+app.use("/api/v1/completion-certificate", completionCertificateRoutes);
 
 // Routes
 
