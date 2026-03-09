@@ -60,12 +60,12 @@ const offerLetterSchema = new mongoose.Schema({
 
   reportingManager: {
     type: String,
-    required: true,
+   
   },
 
-  noticePeriod: {
-    type: String,
-  },
+  // noticePeriod: {
+  //   type: String,
+  // },
 
   offerValidTill: {
     type: Date,
@@ -83,11 +83,11 @@ const offerLetterSchema = new mongoose.Schema({
     required: true,
   },
 
-  status: {
-    type: String,
-    enum: ["Draft", "Issued", "Accepted", "Rejected"],
-    default: "Draft",
-  },
+  // status: {
+  //   type: String,
+  //   enum: ["Draft", "Issued", "Accepted", "Rejected"],
+  //   default: "Draft",
+  // },
 });
 
 /**

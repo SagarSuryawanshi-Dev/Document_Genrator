@@ -44,9 +44,9 @@ const confirmationLetterSchema = new mongoose.Schema({
     type: String,
   },
 
-  address: {
-    type: String,
-  },
+  // address: {
+  //   type: String,
+  // },
 
   confirmationType: {
     type: String,

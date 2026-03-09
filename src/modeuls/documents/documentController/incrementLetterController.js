@@ -15,6 +15,7 @@ export const createIncrementLetter = async (req, res) => {
       effectiveDate,
       incrementType,
       issueDate,
+      performanceYear,
       company,
     } = data;
 
@@ -27,6 +28,7 @@ export const createIncrementLetter = async (req, res) => {
       !effectiveDate ||
       !incrementType ||
       !issueDate ||
+      !performanceYear ||
       !company
     ) {
       return res.status(400).json({

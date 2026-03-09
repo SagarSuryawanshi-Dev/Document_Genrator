@@ -29,10 +29,14 @@ const incrementLetterSchema = new mongoose.Schema({
     type: String,
   },
 
-  currentCTC: {
-    type: Number,
-  },
+  // currentCTC: {
+  //   type: Number,
+  // },
 
+  performanceYear:{
+    type:Number,
+    required:true,
+  },
   newCTC: {
     type: Number,
     required: true,

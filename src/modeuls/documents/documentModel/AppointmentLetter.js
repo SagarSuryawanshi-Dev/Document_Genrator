@@ -111,12 +111,12 @@ const appointmentLetterSchema = new mongoose.Schema(
       trim: true,
     },
 
-    employeeId: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
+    // employeeId: {
+    //   type: String,
+    //   required: true,
+    //   unique: true,
+    //   trim: true,
+    // },
 
     address: {
       type: String,
@@ -157,7 +157,7 @@ const appointmentLetterSchema = new mongoose.Schema(
 
     reportingManager: {
       type: String,
-      required: true,
+     
     },
 
     workHours: {
