@@ -1,8 +1,8 @@
-import RelievingLetter from "../documentModel/RelievingLetter.js";
+import IncrementLetter from "../documentModel/IncrementLetter.js";
 
 /* ================= CREATE ================= */
 
-export const createRelievingLetter = async (req, res) => {
+export const createIncrementLetter = async (req, res) => {
   try {
     const data = req.body;
 
@@ -11,8 +11,9 @@ export const createRelievingLetter = async (req, res) => {
       employeeName,
       employeeId,
       designation,
-      joiningDate,
-      lastWorkingDay,
+      newCTC,
+      effectiveDate,
+      incrementType,
       issueDate,
       company,
     } = data;
@@ -22,8 +23,9 @@ export const createRelievingLetter = async (req, res) => {
       !employeeName ||
       !employeeId ||
       !designation ||
-      !joiningDate ||
-      !lastWorkingDay ||
+      !newCTC ||
+      !effectiveDate ||
+      !incrementType ||
       !issueDate ||
       !company
     ) {
@@ -33,46 +35,46 @@ export const createRelievingLetter = async (req, res) => {
       });
     }
 
-    /* prevent duplicate employee relieving */
-    const existing = await RelievingLetter.findOne({
+    /* check duplicate increment */
+    const existing = await IncrementLetter.findOne({
       company,
       employeeId,
-      lastWorkingDay,
+      effectiveDate,
     });
 
     if (existing) {
       return res.status(409).json({
         success: false,
-        message: "Relieving letter already exists for this employee",
+        message: "Increment already issued for this employee on this date",
       });
     }
 
-    /* attach logged-in user */
+    /* attach logged in user */
     if (req.user) {
       data.createdBy = req.user.id;
     }
 
     /* generate document number */
-    const count = await RelievingLetter.countDocuments();
+    const count = await IncrementLetter.countDocuments();
 
-    data.documentNumber = `REL-${new Date().getFullYear()}-${String(
+    data.documentNumber = `INC-${new Date().getFullYear()}-${String(
       count + 1
     ).padStart(4, "0")}`;
 
-    const letter = await RelievingLetter.create(data);
+    const letter = await IncrementLetter.create(data);
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
-      message: "Relieving Letter created successfully",
+      message: "Increment Letter created successfully",
       data: letter,
     });
   } catch (error) {
-    console.error("CREATE RELIEVING LETTER ERROR:", error);
+    console.error("CREATE INCREMENT LETTER ERROR:", error);
 
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: "Duplicate document number detected",
+        message: "Duplicate increment detected",
       });
     }
 
@@ -82,11 +84,12 @@ export const createRelievingLetter = async (req, res) => {
     });
   }
 };
+
 /* ================= GET ALL ================= */
 
-export const getAllRelievingLetters = async (req, res) => {
+export const getAllIncrementLetters = async (req, res) => {
   try {
-    const letters = await RelievingLetter.find()
+    const letters = await IncrementLetter.find()
       .populate("createdBy", "name email")
       .sort({ createdAt: -1 });
 
@@ -107,11 +110,11 @@ export const getAllRelievingLetters = async (req, res) => {
 
 /* ================= GET BY ID ================= */
 
-export const getRelievingLetterById = async (req, res) => {
+export const getIncrementLetterById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const letter = await RelievingLetter.findById(id).populate(
+    const letter = await IncrementLetter.findById(id).populate(
       "createdBy",
       "name email"
     );
@@ -119,7 +122,7 @@ export const getRelievingLetterById = async (req, res) => {
     if (!letter) {
       return res.status(404).json({
         success: false,
-        message: "Relieving letter not found",
+        message: "Increment letter not found",
       });
     }
 
@@ -139,11 +142,11 @@ export const getRelievingLetterById = async (req, res) => {
 
 /* ================= UPDATE ================= */
 
-export const updateRelievingLetter = async (req, res) => {
+export const updateIncrementLetter = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const updated = await RelievingLetter.findByIdAndUpdate(id, req.body, {
+    const updated = await IncrementLetter.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
     });
@@ -151,13 +154,13 @@ export const updateRelievingLetter = async (req, res) => {
     if (!updated) {
       return res.status(404).json({
         success: false,
-        message: "Relieving letter not found",
+        message: "Increment letter not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Relieving letter updated successfully",
+      message: "Increment letter updated successfully",
       data: updated,
     });
   } catch (error) {
@@ -172,22 +175,22 @@ export const updateRelievingLetter = async (req, res) => {
 
 /* ================= DELETE ================= */
 
-export const deleteRelievingLetter = async (req, res) => {
+export const deleteIncrementLetter = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deleted = await RelievingLetter.findByIdAndDelete(id);
+    const deleted = await IncrementLetter.findByIdAndDelete(id);
 
     if (!deleted) {
       return res.status(404).json({
         success: false,
-        message: "Relieving letter not found",
+        message: "Increment letter not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Relieving letter deleted successfully",
+      message: "Increment letter deleted successfully",
     });
   } catch (error) {
     console.error("DELETE ERROR:", error);
