@@ -1,5 +1,5 @@
 import express from "express"
-import { createAppointmentLetter, getAllAppointmentLetters, getAppointmentLetterById,updateAppointmentLetter, deleteAppointmentLetter } from "../documentController/appointmentLetterController.js"
+import { createAppointmentLetter, getAllAppointmentLetters, getAppointmentLetterById,updateAppointmentLetter, deleteAppointmentLetter } from "../documentController/appointmentLetterController.js"  
 
 
 
