@@ -32,3 +32,14 @@ export const Signup = async (req, res, next) => {
     return next(new AppError(error.message, 500));
   }
 };
+
+export const getAllUsers = async (req,res,next) => {
+  try {
+     const users = await User.find().select("-password").sort({ createdAt: -1 })
+     
+     return sendResponse(res,200,"user fetched successfully",users)
+
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+}
