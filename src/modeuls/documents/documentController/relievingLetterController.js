@@ -1,4 +1,4 @@
-import RelievingLetter from "../models/RelievingLetter.js";
+import RelievingLetter from "../documentModel/RelievingLetter.js";
 
 /* ================= CREATE ================= */
 
@@ -33,7 +33,7 @@ export const createRelievingLetter = async (req, res) => {
       });
     }
 
-    /* prevent duplicate */
+    /* prevent duplicate employee relieving */
     const existing = await RelievingLetter.findOne({
       company,
       employeeId,
@@ -47,10 +47,17 @@ export const createRelievingLetter = async (req, res) => {
       });
     }
 
-    /* attach logged in user if available */
+    /* attach logged-in user */
     if (req.user) {
       data.createdBy = req.user.id;
     }
+
+    /* generate document number */
+    const count = await RelievingLetter.countDocuments();
+
+    data.documentNumber = `REL-${new Date().getFullYear()}-${String(
+      count + 1
+    ).padStart(4, "0")}`;
 
     const letter = await RelievingLetter.create(data);
 
@@ -65,7 +72,7 @@ export const createRelievingLetter = async (req, res) => {
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: "Duplicate relieving letter detected",
+        message: "Duplicate document number detected",
       });
     }
 
@@ -75,7 +82,6 @@ export const createRelievingLetter = async (req, res) => {
     });
   }
 };
-
 /* ================= GET ALL ================= */
 
 export const getAllRelievingLetters = async (req, res) => {

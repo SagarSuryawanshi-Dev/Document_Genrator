@@ -2,23 +2,7 @@ import mongoose from "mongoose";
 import Document from "./BaseDocument.js";
 
 const confirmationLetterSchema = new mongoose.Schema({
-  mrms: {
-    type: String,
-    enum: ["Mr.", "Mrs.", "Miss.", "Mx."],
-    required: true,
-  },
-
-  employeeName: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-
-  employeeId: {
-    type: String,
-    required: true,
-    trim: true,
-  },
+ 
 
   effectiveDate: {
     type: Date,
@@ -44,9 +28,9 @@ const confirmationLetterSchema = new mongoose.Schema({
     type: String,
   },
 
-  address: {
-    type: String,
-  },
+  // address: {
+  //   type: String,
+  // },
 
   confirmationType: {
     type: String,

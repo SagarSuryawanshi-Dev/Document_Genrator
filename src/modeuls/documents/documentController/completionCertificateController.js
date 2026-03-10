@@ -1,15 +1,13 @@
 import CompletionCertificate from "../documentModel/CompletionCertificate.js";
+import AppError from "../../../utlis/apiError.js";
 
-/* ================= CREATE ================= */
+
 export const createCompletionCertificate = async (req, res) => {
   try {
     const body = req.body;
 
     if (!body || Object.keys(body).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Request body is missing",
-      });
+      throw new AppError("Request body is Missing", 400);
     }
 
     const {
@@ -30,10 +28,7 @@ export const createCompletionCertificate = async (req, res) => {
       !role ||
       !issueDate
     ) {
-      return res.status(400).json({
-        success: false,
-        message: "Please fill all required fields",
-      });
+      throw new AppError("All Fields are Required", 400);
     }
 
     /* ===== DUPLICATE CHECK ===== */
@@ -43,11 +38,7 @@ export const createCompletionCertificate = async (req, res) => {
     });
 
     if (existing) {
-      return res.status(409).json({
-        success: false,
-        message:
-          "Completion certificate already exists for this employee and project",
-      });
+      throw new AppError("Competion certificate already exists for this employee", 400);
     }
 
     const certificate = await CompletionCertificate.create(body);
@@ -61,21 +52,14 @@ export const createCompletionCertificate = async (req, res) => {
     console.error("CREATE ERROR:", error);
 
     if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "Duplicate certificate detected",
-      });
+      throw new AppError("Completion certificate already exists for this employee", 400);
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-      error: error.message,
-    });
+    throw new AppError(error.message, 400);
   }
 };
 
-/* ================= GET ALL ================= */
+
 export const getAllCompletionCertificates = async (req, res) => {
   try {
     const certificates = await CompletionCertificate.find()
@@ -97,7 +81,7 @@ export const getAllCompletionCertificates = async (req, res) => {
   }
 };
 
-/* ================= GET BY ID ================= */
+
 export const getCompletionCertificateById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -127,7 +111,7 @@ export const getCompletionCertificateById = async (req, res) => {
   }
 };
 
-/* ================= UPDATE ================= */
+
 export const updateCompletionCertificate = async (req, res) => {
   try {
     const { id } = req.params;
@@ -161,7 +145,7 @@ export const updateCompletionCertificate = async (req, res) => {
   }
 };
 
-/* ================= DELETE ================= */
+
 export const deleteCompletionCertificate = async (req, res) => {
   try {
     const { id } = req.params;

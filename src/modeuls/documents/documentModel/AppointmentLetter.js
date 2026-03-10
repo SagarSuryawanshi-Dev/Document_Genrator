@@ -139,7 +139,7 @@ const appointmentLetterSchema = new mongoose.Schema(
 
     reportingManager: {
       type: String,
-      required: true,
+     
     },
 
     workHours: {

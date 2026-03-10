@@ -2,17 +2,7 @@ import mongoose from "mongoose";
 import Document from "./BaseDocument.js";
 
 const offerLetterSchema = new mongoose.Schema({
-  mrms: {
-    type: String,
-    enum: ["Mr.", "Mrs.", "Miss.", "Mx."],
-    required: true,
-  },
 
-  candidateName: {
-    type: String,
-    required: true,
-    trim: true,
-  },
 
   address: {
     type: String,
@@ -60,12 +50,12 @@ const offerLetterSchema = new mongoose.Schema({
 
   reportingManager: {
     type: String,
-    required: true,
+   
   },
 
-  noticePeriod: {
-    type: String,
-  },
+  // noticePeriod: {
+  //   type: String,
+  // },
 
   offerValidTill: {
     type: Date,
@@ -83,11 +73,11 @@ const offerLetterSchema = new mongoose.Schema({
     required: true,
   },
 
-  status: {
-    type: String,
-    enum: ["Draft", "Issued", "Accepted", "Rejected"],
-    default: "Draft",
-  },
+  // status: {
+  //   type: String,
+  //   enum: ["Draft", "Issued", "Accepted", "Rejected"],
+  //   default: "Draft",
+  // },
 });
 
 /**

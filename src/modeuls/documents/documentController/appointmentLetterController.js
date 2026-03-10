@@ -2,7 +2,6 @@ import AppointmentLetter from "../documentModel/AppointmentLetter.js";
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
 import { generateEmployeeId } from "../../../utlis/generateEmployeedId.js"
-import companyPrefixes from "../../../utlis/organizationPrefix.js";
 
 
 /* ================= CREATE ================= */
