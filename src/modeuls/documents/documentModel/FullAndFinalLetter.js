@@ -2,17 +2,7 @@ import mongoose from "mongoose";
 import Document from "./BaseDocument.js";
 
 const fullAndFinalSchema = new mongoose.Schema({
-  employeeName: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-
-  employeeId: {
-    type: String,
-    required: true,
-    trim: true,
-  },
+ 
 
   designation: {
     type: String,

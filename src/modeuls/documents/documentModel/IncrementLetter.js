@@ -2,24 +2,7 @@ import mongoose from "mongoose";
 import Document from "./BaseDocument.js";
 
 const incrementLetterSchema = new mongoose.Schema({
-  mrms: {
-    type: String,
-    enum: ["Mr.", "Mrs.", "Miss.", "Mx."],
-    required: true,
-  },
-
-  employeeName: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-
-  employeeId: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-
+ 
   designation: {
     type: String,
     required: true,

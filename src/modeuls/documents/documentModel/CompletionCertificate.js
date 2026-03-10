@@ -2,11 +2,7 @@ import mongoose from "mongoose";
 
 const CompletionCertificateSchema = new mongoose.Schema(
   {
-    employee: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Employee",
-      required: true,
-    },
+    
     projectName: {
       type: String,
       required: true,

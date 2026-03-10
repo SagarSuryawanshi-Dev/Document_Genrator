@@ -2,17 +2,7 @@ import mongoose from "mongoose";
 import Document from "./BaseDocument.js";
 
 const offerLetterSchema = new mongoose.Schema({
-  mrms: {
-    type: String,
-    enum: ["Mr.", "Mrs.", "Miss.", "Mx."],
-    required: true,
-  },
 
-  candidateName: {
-    type: String,
-    required: true,
-    trim: true,
-  },
 
   address: {
     type: String,
