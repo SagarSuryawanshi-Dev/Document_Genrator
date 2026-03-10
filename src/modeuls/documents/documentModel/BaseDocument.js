@@ -91,6 +91,23 @@ const options = {
   
 const baseDocumentSchema = new mongoose.Schema(
   {
+        title: {
+      type: String,
+      enum: ["Mr.", "Mrs.", "Miss.", "Mx."],
+      required: true,
+    },
+
+    employeeName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    employeeId: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     company: {
       type: String,
       required: true,
@@ -114,11 +131,16 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
+     issuedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    // required: true
+  },
     documentNumber: {
       type: String,
       trim: true,
     },
+
   },
   options
 );
