@@ -1,6 +1,9 @@
 import AppointmentLetter from "../documentModel/AppointmentLetter.js";
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
+import { generateEmployeeId } from "../../../utlis/generateEmployeedId.js"
+import companyPrefixes from "../../../utlis/organizationPrefix.js";
+
 
 /* ================= CREATE ================= */
 export const createAppointmentLetter = async (req, res) => {
@@ -17,7 +20,6 @@ export const createAppointmentLetter = async (req, res) => {
       "company",
       "issuedTo",
       "employeeName",
-      "employeeId",
       "address",
       "position",
       "joiningDate",
@@ -26,7 +28,7 @@ export const createAppointmentLetter = async (req, res) => {
       "workLocation",
       "reportingManager",
       "appointmentType",
-      "issueDate",
+      "issueDate"
     ];
 
     const missingFields = requiredFields.filter(
@@ -39,9 +41,12 @@ export const createAppointmentLetter = async (req, res) => {
         400,
       );
     }
+    const employeeId = await generateEmployeeId(body.company);
+      
+    
 
     const exists = await AppointmentLetter.findOne({
-      employeeId: body.employeeId,
+      employeeId:employeeId,
     });
 
     if (exists) {
@@ -54,6 +59,7 @@ export const createAppointmentLetter = async (req, res) => {
     // ✅ CREATE DOCUMENT NUMBER
     const letter = await AppointmentLetter.create({
       ...body,
+      employeeId: employeeId,
       documentNumber: `AL-${Date.now()}`, // 🔥 UNIQUE
     });
     console.log("appointment letter", letter )

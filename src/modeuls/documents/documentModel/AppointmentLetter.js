@@ -99,24 +99,6 @@ import Document from "./BaseDocument.js";
 
 const appointmentLetterSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      enum: ["Mr.", "Mrs.", "Miss.", "Mx."],
-      required: true,
-    },
-
-    employeeName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    employeeId: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
 
     address: {
       type: String,
