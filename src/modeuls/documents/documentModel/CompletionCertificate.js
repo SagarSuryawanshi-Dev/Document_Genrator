@@ -2,10 +2,25 @@ import mongoose from "mongoose";
 
 const CompletionCertificateSchema = new mongoose.Schema(
   {
-    employee: {
+    identity:{
+      type: String,
+      required:true,
+      enum:[
+        "Mr.",
+        "Mrs.",
+        "Miss.",
+        "Mx."
+      ]
+    },
+    employeeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",
       required: true,
+    },
+    employeeName: {
+      type:String,
+      required:true,
+      trim:true
     },
     projectName: {
       type: String,
@@ -17,15 +32,31 @@ const CompletionCertificateSchema = new mongoose.Schema(
       required: true,
     },
     completionDate: {
-      type: Date,
-      required: true,
+     type: Date,
+     required: true,
+     validate: {
+    validator: function (value) {
+      return value >= this.startDate;
     },
-    role: {
+    message: "Completion date must be after start date"
+  }
+},
+    designation: {
       type: String,
       required: true,
     },
-    technologies: [{ type: String }],
-    achievements: [{ type: String }],
+    department:{
+      type: String,
+      required:true,
+      trim:true
+    },
+    roleinProject:{
+      type:String,
+      required:true,
+      trim:true
+    },
+    technologies: [{ type: String, trim:true }],
+    achievements: [{ type: String, trim:true }],
     clientName: {
       type: String,
     },
@@ -38,7 +69,7 @@ const CompletionCertificateSchema = new mongoose.Schema(
 );
 
 CompletionCertificateSchema.index(
-  { employee: 1, projectName: 1 },
+  { employeeId: 1, projectName: 1 },
   { unique: true }
 );
 
@@ -46,3 +77,5 @@ export default mongoose.model(
   "CompletionCertificate",
   CompletionCertificateSchema
 );
+
+
