@@ -206,7 +206,7 @@
 // };
 
 import CompletionCertificate from "../documentModel/CompletionCertificate.js";
-import { getOrCreateEmployeeId } from "../../../utlis/getOrCreateEmployeeId.js";
+import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
 
@@ -271,7 +271,7 @@ export const createCompletionCertificate = async (req, res, next) => {
     if (existingCertificate) {
       throw new AppError(
         "Completion certificate already exists for this employee",
-        409
+        409,
       );
     }
 
@@ -285,7 +285,7 @@ export const createCompletionCertificate = async (req, res, next) => {
       res,
       201,
       "Completion Certificate created successfully",
-      certificate
+      certificate,
     );
   } catch (error) {
     next(error);
@@ -307,7 +307,7 @@ export const getAllCompletionCertificates = async (req, res, next) => {
       {
         count: certificates.length,
         certificates,
-      }
+      },
     );
   } catch (error) {
     next(error);
@@ -326,7 +326,12 @@ export const getCompletionCertificateById = async (req, res, next) => {
       throw new AppError("Completion Certificate not found", 404);
     }
 
-    return sendResponse(res, 200, "Completion certificate fetched", certificate);
+    return sendResponse(
+      res,
+      200,
+      "Completion certificate fetched",
+      certificate,
+    );
   } catch (error) {
     next(error);
   }
@@ -341,7 +346,7 @@ export const updateCompletionCertificate = async (req, res, next) => {
     const updatedCertificate = await CompletionCertificate.findByIdAndUpdate(
       id,
       req.body,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedCertificate) {
@@ -352,7 +357,7 @@ export const updateCompletionCertificate = async (req, res, next) => {
       res,
       200,
       "Completion Certificate updated successfully",
-      updatedCertificate
+      updatedCertificate,
     );
   } catch (error) {
     next(error);
@@ -375,7 +380,7 @@ export const deleteCompletionCertificate = async (req, res, next) => {
     return sendResponse(
       res,
       200,
-      "Completion Certificate deleted successfully"
+      "Completion Certificate deleted successfully",
     );
   } catch (error) {
     next(error);

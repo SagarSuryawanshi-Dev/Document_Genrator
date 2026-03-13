@@ -1,5 +1,5 @@
 import Document from "../modeuls/documents/documentModel/BaseDocument.js";
-import { generateEmployeeId } from "../utlis/generateEmployeedId.js";
+import { generateEmployeeId } from "./generateEmployeedId.js";
 
 export const getOrCreateEmployeeId = async (email, company) => {
   const existingEmployee = await Document.findOne({ email, company });

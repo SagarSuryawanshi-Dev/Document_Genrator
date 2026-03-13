@@ -1,22 +1,24 @@
 import FullAndFinalLetter from "../documentModel/FullAndFinalLetter.js";
+import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
+import AppError from "../../../utlis/apiError.js";
+import sendResponse from "../../../utlis/apiResponse.js";
 
 /* ================= CREATE ================= */
-export const createFullAndFinalLetter = async (req, res) => {
+
+export const createFullAndFinalLetter = async (req, res, next) => {
   try {
     const body = req.body;
 
     if (!body || Object.keys(body).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Request body is missing",
-      });
+      throw new AppError("Request body is missing", 400);
     }
 
     const {
       company,
       issuedTo,
+      title,
       employeeName,
-      employeeId,
+      email,
       designation,
       fnfDate,
       month,
@@ -29,12 +31,18 @@ export const createFullAndFinalLetter = async (req, res) => {
       workdays,
     } = body;
 
+    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
+
+    const employeeId = await getOrCreateEmployeeId(email, company);
+    body.employeeId = employeeId;
+
     /* ===== REQUIRED FIELD VALIDATION ===== */
+
     if (
       !company ||
       !issuedTo ||
+      !title ||
       !employeeName ||
-      !employeeId ||
       !designation ||
       !fnfDate ||
       !month ||
@@ -46,13 +54,11 @@ export const createFullAndFinalLetter = async (req, res) => {
       !finalType ||
       !workdays
     ) {
-      return res.status(400).json({
-        success: false,
-        message: "Please fill all required fields",
-      });
+      throw new AppError("Please fill all required fields", 400);
     }
 
     /* ===== CHECK DUPLICATE ===== */
+
     const existing = await FullAndFinalLetter.findOne({
       company,
       employeeId,
@@ -60,150 +66,99 @@ export const createFullAndFinalLetter = async (req, res) => {
     });
 
     if (existing) {
-      return res.status(409).json({
-        success: false,
-        message:
-          "Full & Final already exists for this employee with this leaving date",
-      });
+      throw new AppError(
+        "Full & Final already exists for this employee with this leaving date",
+        409,
+      );
     }
 
     /* ===== GENERATE DOCUMENT NUMBER ===== */
+
     body.documentNumber = `FNF-${employeeId}-${Date.now()}`;
 
     /* ===== CREATE DOCUMENT ===== */
+
     const newLetter = await FullAndFinalLetter.create(body);
 
-    res.status(201).json({
-      success: true,
-      message: "Full & Final Letter created successfully",
-      data: newLetter,
-    });
+    return sendResponse(
+      res,
+      201,
+      "Full & Final Letter created successfully",
+      newLetter,
+    );
   } catch (error) {
-    console.error("CREATE ERROR:", error);
-
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "Duplicate document detected",
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
 /* ================= GET ALL ================= */
-export const getAllFullAndFinalLetters = async (req, res) => {
+export const getAllFullAndFinalLetters = async (req, res, next) => {
   try {
     const letters = await FullAndFinalLetter.find().sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
+    return sendResponse(res, 200, "Full & Final letters fetched successfully", {
       count: letters.length,
-      data: letters,
+      letters,
     });
   } catch (error) {
-    console.error("GET ALL ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    next(error);
   }
 };
-
 /* ================= GET BY ID ================= */
-export const getFullAndFinalLetterById = async (req, res) => {
+export const getFullAndFinalLetterById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const letter = await FullAndFinalLetter.findById(id);
 
     if (!letter) {
-      return res.status(404).json({
-        success: false,
-        message: "Full & Final Letter not found",
-      });
+      throw new AppError("Full & Final Letter not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      data: letter,
-    });
+    return sendResponse(res, 200, "Full & Final letter fetched", letter);
   } catch (error) {
-    console.error("GET BY ID ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    next(error);
   }
 };
-
 /* ================= UPDATE ================= */
-export const updateFullAndFinalLetter = async (req, res) => {
+export const updateFullAndFinalLetter = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const updatedLetter = await FullAndFinalLetter.findByIdAndUpdate(
       id,
       req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
+      { new: true, runValidators: true },
     );
 
     if (!updatedLetter) {
-      return res.status(404).json({
-        success: false,
-        message: "Full & Final Letter not found",
-      });
+      throw new AppError("Full & Final Letter not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Full & Final Letter updated successfully",
-      data: updatedLetter,
-    });
+    return sendResponse(
+      res,
+      200,
+      "Full & Final Letter updated successfully",
+      updatedLetter,
+    );
   } catch (error) {
-    console.error("UPDATE ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    next(error);
   }
 };
 
 /* ================= DELETE ================= */
-export const deleteFullAndFinalLetter = async (req, res) => {
+export const deleteFullAndFinalLetter = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const deletedLetter = await FullAndFinalLetter.findByIdAndDelete(id);
 
     if (!deletedLetter) {
-      return res.status(404).json({
-        success: false,
-        message: "Full & Final Letter not found",
-      });
+      throw new AppError("Full & Final Letter not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Full & Final Letter deleted successfully",
-    });
+    return sendResponse(res, 200, "Full & Final Letter deleted successfully");
   } catch (error) {
-    console.error("DELETE ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    next(error);
   }
 };

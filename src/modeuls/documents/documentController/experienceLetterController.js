@@ -1,5 +1,5 @@
 import ExperienceLetter from "../documentModel/ExperienceLetter.js";
-import { getOrCreateEmployeeId } from "../../../utlis/getOrCreateEmployeeId.js";
+import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
 

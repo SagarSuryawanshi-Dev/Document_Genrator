@@ -10,7 +10,7 @@ import {
 const router = express.Router();
 
 /* CREATE */
-router.post("/create", createConfirmationLetter);
+router.post("/", createConfirmationLetter);
 
 /* GET ALL */
 router.get("/", getAllConfirmationLetters);

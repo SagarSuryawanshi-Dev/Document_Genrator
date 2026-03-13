@@ -1,12 +1,11 @@
 import AppointmentLetter from "../documentModel/AppointmentLetter.js";
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
-import { generateEmployeeId } from "../../../utlis/generateEmployeedId.js"
-
+import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
 
 /* ================= CREATE ================= */
-export const createAppointmentLetter = async (req, res) => {
-  console.log("Controller hit");
+
+export const createAppointmentLetter = async (req, res, next) => {
   try {
     const body = req.body;
 
@@ -14,25 +13,42 @@ export const createAppointmentLetter = async (req, res) => {
       throw new AppError("Request body is Missing", 400);
     }
 
+    const {
+      title,
+      company,
+      issuedTo,
+      employeeName,
+      email,
+      address,
+      position,
+      joiningDate,
+      probationPeriod,
+      salary,
+      workLocation,
+      reportingManager,
+      appointmentType,
+      issueDate,
+    } = body;
+
     const requiredFields = [
       "title",
       "company",
       "issuedTo",
       "employeeName",
+      "email",
       "address",
       "position",
       "joiningDate",
       "probationPeriod",
       "salary",
       "workLocation",
-      "reportingManager",
       "appointmentType",
-      "issueDate"
+      "issueDate",
     ];
 
     const missingFields = requiredFields.filter(
-  (field) => body[field] === undefined
-);
+      (field) => body[field] === undefined,
+    );
 
     if (missingFields.length > 0) {
       throw new AppError(
@@ -40,12 +56,18 @@ export const createAppointmentLetter = async (req, res) => {
         400,
       );
     }
-    const employeeId = await generateEmployeeId(body.company);
-      
-    
+
+    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
+
+    const employeeId = await getOrCreateEmployeeId(email, company);
+    body.employeeId = employeeId;
+
+    /* ===== DUPLICATE CHECK ===== */
 
     const exists = await AppointmentLetter.findOne({
-      employeeId:employeeId,
+      company,
+      employeeId,
+      joiningDate,
     });
 
     if (exists) {
@@ -55,24 +77,23 @@ export const createAppointmentLetter = async (req, res) => {
       );
     }
 
-    // ✅ CREATE DOCUMENT NUMBER
+    /* ===== CREATE DOCUMENT ===== */
+
     const letter = await AppointmentLetter.create({
       ...body,
-      employeeId: employeeId,
-      documentNumber: `AL-${Date.now()}`, // 🔥 UNIQUE
+      documentNumber: `AL-${employeeId}-${Date.now()}`,
     });
-    console.log("appointment letter", letter )
-    sendResponse(
+
+    return sendResponse(
       res,
       201,
       "Appointment letter created successfully",
-      letter
+      letter,
     );
-  } catch (err) {
-    throw new AppError(err.message, 409);
+  } catch (error) {
+    next(error);
   }
 };
-
 /* ================= READ ALL ================= */
 export const getAllAppointmentLetters = async (req, res) => {
   try {

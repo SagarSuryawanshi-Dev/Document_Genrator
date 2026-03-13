@@ -1,5 +1,5 @@
 import RelievingLetter from "../documentModel/RelievingLetter.js";
-import { getOrCreateEmployeeId } from "../../../utlis/getOrCreateEmployeeId.js";
+import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
 
@@ -53,7 +53,7 @@ export const createRelievingLetter = async (req, res, next) => {
     if (existingLetter) {
       throw new AppError(
         "Relieving letter already exists for this employee",
-        409
+        409,
       );
     }
 
@@ -66,7 +66,7 @@ export const createRelievingLetter = async (req, res, next) => {
       res,
       201,
       "Relieving Letter created successfully",
-      newLetter
+      newLetter,
     );
   } catch (error) {
     next(error);
@@ -115,7 +115,7 @@ export const updateRelievingLetter = async (req, res, next) => {
     const updatedLetter = await RelievingLetter.findByIdAndUpdate(
       id,
       req.body,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedLetter) {
@@ -126,7 +126,7 @@ export const updateRelievingLetter = async (req, res, next) => {
       res,
       200,
       "Relieving Letter updated successfully",
-      updatedLetter
+      updatedLetter,
     );
   } catch (error) {
     next(error);

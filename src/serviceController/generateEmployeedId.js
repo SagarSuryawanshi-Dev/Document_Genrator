@@ -26,7 +26,7 @@
 // };
 
 import Document from "../modeuls/documents/documentModel/BaseDocument.js";
-import companyPrefix from "./organizationPrefix.js";
+import companyPrefix from "../utlis/organizationPrefix.js";
 
 export const generateEmployeeId = async (company) => {
   const prefix = companyPrefix[company];
