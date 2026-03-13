@@ -1,4 +1,4 @@
-import InternshipCertificate from "../models/InternshipCertificate.js";
+import InternshipCertificate from "../documentModel/InternshipCertificate.js";
 
 /* ================= CREATE ================= */
 

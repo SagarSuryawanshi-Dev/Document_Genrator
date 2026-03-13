@@ -6,6 +6,7 @@ import dbConnection from "./src/config/db.js";
 import userRoutes from "./src/user/user.routes.js";
 import adminRoutes from "./src/admin/admin.router.js";
 import documentsRoutes from "./src/modeuls/documents/documentRoutes/documentsRoutes.js"
+import dns from "dns"
 const app = express();
 
 app.use(express.json());
@@ -16,6 +17,11 @@ app.use(cors({
   credentials:true
 
 }))
+
+dns.setServers([
+  '1.1.1.1',
+  '8.8.8.8'
+])
 
 dotenv.config();
 dbConnection();
