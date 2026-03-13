@@ -7,12 +7,21 @@ import {
   deleteIncrementLetter,
 } from "../documentController/incrementLetterController.js";
 
-const router = express.Router();
+const incrementLetterRoutes = express.Router();
 
-router.post("/", createIncrementLetter);
-router.get("/", getAllIncrementLetters);
-router.get("/:id", getIncrementLetterById);
-router.put("/:id", updateIncrementLetter);
-router.delete("/:id", deleteIncrementLetter);
+// generate letter
+incrementLetterRoutes.post("/generate", createIncrementLetter);
 
-export default router;
+// get all letter
+incrementLetterRoutes.get("/all-letters", getAllIncrementLetters);
+
+// get letter by id
+incrementLetterRoutes.get("/user/:id", getIncrementLetterById);
+
+// update letter
+incrementLetterRoutes.put("/update/:id", updateIncrementLetter);
+
+// delete letter
+incrementLetterRoutes.delete("/delete/:id", deleteIncrementLetter);
+
+export default incrementLetterRoutes;

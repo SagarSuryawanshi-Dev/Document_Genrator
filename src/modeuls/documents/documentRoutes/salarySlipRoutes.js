@@ -7,12 +7,21 @@ import {
   deleteSalarySlip,
 } from "../documentController/SalarySlipController.js";
 
-const router = express.Router();
+const salarySlipRoutes = express.Router();
 
-router.post("/", createSalarySlip);
-router.get("/", getAllSalarySlips);
-router.get("/:id", getSalarySlipById);
-router.put("/:id", updateSalarySlip);
-router.delete("/:id", deleteSalarySlip);
+// generate letter
+salarySlipRoutes.post("/generate", createSalarySlip);
 
-export default router;
+// get all letter
+salarySlipRoutes.get("/all-letters", getAllSalarySlips);
+
+// get letter by id
+salarySlipRoutes.get("/user/:id", getSalarySlipById);
+
+// update letter
+salarySlipRoutes.put("/update/:id", updateSalarySlip);
+
+// delete letter
+salarySlipRoutes.delete("/delete/:id", deleteSalarySlip);
+
+export default salarySlipRoutes;

@@ -7,12 +7,23 @@ import {
   deleteInternshipCertificate,
 } from "../documentController/internshipCertificateController.js";
 
-const router = express.Router();
+const internshipCertificateRoutes = express.Router();
 
-router.post("/", createInternshipCertificate);
-router.get("/", getAllInternshipCertificates);
-router.get("/:id", getInternshipCertificateById);
-router.put("/:id", updateInternshipCertificate);
-router.delete("/:id", deleteInternshipCertificate);
 
-export default router;
+
+// generate letter
+internshipCertificateRoutes.post("/generate", createInternshipCertificate);
+
+// get all letter
+internshipCertificateRoutes.get("/all-letters", getAllInternshipCertificates);
+
+// get letter by id
+internshipCertificateRoutes.get("/user/:id", getInternshipCertificateById);
+
+// update  letter
+internshipCertificateRoutes.put("/update/:id", updateInternshipCertificate);
+
+// delete letter
+internshipCertificateRoutes.delete("/delete/:id", deleteInternshipCertificate);
+
+export default internshipCertificateRoutes;
