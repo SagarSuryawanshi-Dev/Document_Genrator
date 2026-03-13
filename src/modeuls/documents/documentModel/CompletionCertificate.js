@@ -1,27 +1,8 @@
 import mongoose from "mongoose";
+import  Document  from "./BaseDocument.js";
 
 const CompletionCertificateSchema = new mongoose.Schema(
   {
-    identity:{
-      type: String,
-      required:true,
-      enum:[
-        "Mr.",
-        "Mrs.",
-        "Miss.",
-        "Mx."
-      ]
-    },
-    employeeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Employee",
-      required: true,
-    },
-    employeeName: {
-      type:String,
-      required:true,
-      trim:true
-    },
     projectName: {
       type: String,
       required: true,
@@ -69,11 +50,12 @@ const CompletionCertificateSchema = new mongoose.Schema(
 );
 
 CompletionCertificateSchema.index(
-  { employeeId: 1, projectName: 1 },
+  { employeeId: 1,projectName: 1},
   { unique: true }
+  
 );
 
-export default mongoose.model(
+export const CompletionCertificate = Document.discriminator(
   "CompletionCertificate",
   CompletionCertificateSchema
 );
