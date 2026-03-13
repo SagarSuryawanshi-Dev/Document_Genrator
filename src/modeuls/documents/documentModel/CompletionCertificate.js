@@ -2,25 +2,20 @@ import mongoose from "mongoose";
 
 const CompletionCertificateSchema = new mongoose.Schema(
   {
-    identity:{
+    title: {
       type: String,
-      required:true,
-      enum:[
-        "Mr.",
-        "Mrs.",
-        "Miss.",
-        "Mx."
-      ]
+      required: true,
+      enum: ["Mr.", "Mrs.", "Miss.", "Mx."],
     },
     employeeId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "Employee",
       required: true,
     },
     employeeName: {
-      type:String,
-      required:true,
-      trim:true
+      type: String,
+      required: true,
+      trim: true,
     },
     projectName: {
       type: String,
@@ -32,31 +27,31 @@ const CompletionCertificateSchema = new mongoose.Schema(
       required: true,
     },
     completionDate: {
-     type: Date,
-     required: true,
-     validate: {
-    validator: function (value) {
-      return value >= this.startDate;
+      type: Date,
+      required: true,
+      validate: {
+        validator: function (value) {
+          return value >= this.startDate;
+        },
+        message: "Completion date must be after start date",
+      },
     },
-    message: "Completion date must be after start date"
-  }
-},
     designation: {
       type: String,
       required: true,
     },
-    department:{
+    department: {
       type: String,
-      required:true,
-      trim:true
+      required: true,
+      trim: true,
     },
-    roleinProject:{
-      type:String,
-      required:true,
-      trim:true
+    roleinProject: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    technologies: [{ type: String, trim:true }],
-    achievements: [{ type: String, trim:true }],
+    technologies: [{ type: String, trim: true }],
+    achievements: [{ type: String, trim: true }],
     clientName: {
       type: String,
     },
@@ -65,17 +60,15 @@ const CompletionCertificateSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 CompletionCertificateSchema.index(
   { employeeId: 1, projectName: 1 },
-  { unique: true }
+  { unique: true },
 );
 
 export default mongoose.model(
   "CompletionCertificate",
-  CompletionCertificateSchema
+  CompletionCertificateSchema,
 );
-
-

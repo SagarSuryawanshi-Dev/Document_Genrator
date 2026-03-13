@@ -1,6 +1,6 @@
 import CompletionCertificate from "../documentModel/CompletionCertificate.js";
 import AppError from "../../../utlis/apiError.js";
-
+import { getOrCreateEmployeeId } from "../../../utlis/getOrCreateEmployeeId.js";
 
 export const createCompletionCertificate = async (req, res) => {
   try {
@@ -11,35 +11,65 @@ export const createCompletionCertificate = async (req, res) => {
     }
 
     const {
-      employee,
+      company,
+      issuedTo,
+      title,
+      employeeName,
+      email,
       projectName,
       startDate,
       completionDate,
-      role,
+      designation,
+      department,
+      roleinProject,
+      technologies,
+      achievements,
+      clientName,
       issueDate,
     } = body;
 
+    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
+    const employeeId = await getOrCreateEmployeeId(email, company);
+    body.employeeId = employeeId;
+
     /* ===== REQUIRED FIELD CHECK ===== */
     if (
-      !employee ||
+      !company ||
+      !issuedTo ||
+      !title ||
+      !employeeName ||
+      !employeeId ||
       !projectName ||
       !startDate ||
       !completionDate ||
-      !role ||
+      !designation ||
+      !department ||
+      !roleinProject ||
       !issueDate
     ) {
-      throw new AppError("All Fields are Required", 400);
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all required fields",
+      });
     }
 
     /* ===== DUPLICATE CHECK ===== */
     const existing = await CompletionCertificate.findOne({
-      employee,
+      company,
+
+      employeeId,
       projectName,
     });
 
     if (existing) {
-      throw new AppError("Competion certificate already exists for this employee", 400);
+      throw new AppError(
+        "Completion certificate already exists for this employee",
+        400,
+      );
     }
+
+    /* ===== GENERATE DOCUMENT NUMBER ===== */
+    body.documentNumber = `COM-${employeeId}-${Date.now()}`;
 
     const certificate = await CompletionCertificate.create(body);
 
@@ -52,13 +82,15 @@ export const createCompletionCertificate = async (req, res) => {
     console.error("CREATE ERROR:", error);
 
     if (error.code === 11000) {
-      throw new AppError("Completion certificate already exists for this employee", 400);
+      throw new AppError(
+        "Completion certificate already exists for this employee",
+        400,
+      );
     }
 
     throw new AppError(error.message, 400);
   }
 };
-
 
 export const getAllCompletionCertificates = async (req, res) => {
   try {
@@ -81,14 +113,12 @@ export const getAllCompletionCertificates = async (req, res) => {
   }
 };
 
-
 export const getCompletionCertificateById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const certificate = await CompletionCertificate.findById(id).populate(
-      "employee"
-    );
+    const certificate =
+      await CompletionCertificate.findById(id).populate("employee");
 
     if (!certificate) {
       return res.status(404).json({
@@ -111,16 +141,18 @@ export const getCompletionCertificateById = async (req, res) => {
   }
 };
 
-
 export const updateCompletionCertificate = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const updatedCertificate =
-      await CompletionCertificate.findByIdAndUpdate(id, req.body, {
+    const updatedCertificate = await CompletionCertificate.findByIdAndUpdate(
+      id,
+      req.body,
+      {
         new: true,
         runValidators: true,
-      });
+      },
+    );
 
     if (!updatedCertificate) {
       return res.status(404).json({
@@ -144,7 +176,6 @@ export const updateCompletionCertificate = async (req, res) => {
     });
   }
 };
-
 
 export const deleteCompletionCertificate = async (req, res) => {
   try {

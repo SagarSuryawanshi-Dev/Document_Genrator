@@ -1,39 +1,53 @@
 import RelievingLetter from "../documentModel/RelievingLetter.js";
-
+import { getOrCreateEmployeeId } from "../../../utlis/getOrCreateEmployeeId.js";
 /* ================= CREATE ================= */
 
 export const createRelievingLetter = async (req, res) => {
   try {
-    const data = req.body;
+    const body = req.body;
+
+    if (!body || Object.keys(body).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Request body is missing",
+      });
+    }
 
     const {
-      mrms,
+      title,
       employeeName,
-      employeeId,
+      email,
       designation,
       joiningDate,
       lastWorkingDay,
       issueDate,
       company,
-    } = data;
+      issuedTo,
+    } = body;
 
+    /* generate or fetch employeeId */
+    const employeeId = await getOrCreateEmployeeId(email, company);
+    body.employeeId = employeeId;
+
+    /* validation */
     if (
-      !mrms ||
+      !title ||
       !employeeName ||
-      !employeeId ||
+      !email ||
       !designation ||
       !joiningDate ||
       !lastWorkingDay ||
       !issueDate ||
-      !company
+      !company ||
+      !issuedTo
     ) {
       return res.status(400).json({
         success: false,
-        message: "Required fields are missing",
+        message: "Please fill all required fields",
       });
     }
 
-    /* prevent duplicate employee relieving */
+    /* prevent duplicate relieving */
     const existing = await RelievingLetter.findOne({
       company,
       employeeId,
@@ -47,19 +61,15 @@ export const createRelievingLetter = async (req, res) => {
       });
     }
 
-    /* attach logged-in user */
+    /* attach logged in user */
     if (req.user) {
-      data.createdBy = req.user.id;
+      body.issuedBy = req.user.id;
     }
 
     /* generate document number */
-    const count = await RelievingLetter.countDocuments();
+    body.documentNumber = `REL-${employeeId}-${Date.now()}`;
 
-    data.documentNumber = `REL-${new Date().getFullYear()}-${String(
-      count + 1
-    ).padStart(4, "0")}`;
-
-    const letter = await RelievingLetter.create(data);
+    const letter = await RelievingLetter.create(body);
 
     return res.status(201).json({
       success: true,
@@ -78,7 +88,8 @@ export const createRelievingLetter = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server Error",
+      error: error.message,
     });
   }
 };
@@ -113,7 +124,7 @@ export const getRelievingLetterById = async (req, res) => {
 
     const letter = await RelievingLetter.findById(id).populate(
       "createdBy",
-      "name email"
+      "name email",
     );
 
     if (!letter) {

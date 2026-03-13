@@ -1,97 +1,13 @@
-  // import mongoose from "mongoose";
-
-  // const options = {
-  //   discriminatorKey: "documentType", // 🔥 important
-  //   timestamps: true,
-  // };
-
-  // const baseDocumentSchema = new mongoose.Schema(
-  //   {
-  //     company: {
-  //       type: mongoose.Schema.Types.ObjectId,
-  //       ref: "Company",
-  //       required: true,
-  //     },
-
-  //     issuedTo: {
-  //       type: String, // candidate name
-  //       required: true,
-  //     }
-      
-  //   },
-  //   options
-  // );
-
-  // export default mongoose.model("Document", baseDocumentSchema);
-
-
-
-
-
-
-
-
-//   import mongoose from "mongoose";
-
-// const options = {
-//   discriminatorKey: "documentType",
-//   timestamps: true,
-// };
-
-// const baseDocumentSchema = new mongoose.Schema(
-//   {
-//     company: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "Company",
-//       required: true,
-//     },
-
-//     issuedTo: {
-//       type: String,
-//       required: true,
-//       trim: true,
-//     },
-
-//     // 🔥 FIX FOR DUPLICATE KEY ERROR
-//     documentNumber: {
-//       type: String,
-//       trim: true,
-//     },
-//   },
-//   options
-// );
-
-// // 🔐 UNIQUE ONLY WHEN VALUE EXISTS
-// baseDocumentSchema.index(
-//   { documentNumber: 1 },
-//   {
-//     unique: true,
-//     partialFilterExpression: {
-//       documentNumber: { $exists: true, $ne: null },
-//     },
-//   }
-// );
-
-// export default mongoose.model("Document", baseDocumentSchema);
-
-
-
-
-
-
-
-
-
 import mongoose from "mongoose";
 
 const options = {
   discriminatorKey: "documentType",
   timestamps: true,
 };
-  
+
 const baseDocumentSchema = new mongoose.Schema(
   {
-        title: {
+    title: {
       type: String,
       enum: ["Mr.", "Mrs.", "Miss.", "Mx."],
       required: true,
@@ -104,6 +20,11 @@ const baseDocumentSchema = new mongoose.Schema(
     },
 
     employeeId: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    email: {
       type: String,
       required: true,
       trim: true,
@@ -131,18 +52,17 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-     issuedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    // required: true
-  },
+    issuedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      // required: true
+    },
     documentNumber: {
       type: String,
       trim: true,
     },
-
   },
-  options
+  options,
 );
 
 // 🔐 UNIQUE documentNumber ONLY when exists
@@ -153,7 +73,7 @@ baseDocumentSchema.index(
     partialFilterExpression: {
       documentNumber: { $exists: true, $ne: null },
     },
-  }
+  },
 );
 
 export default mongoose.model("Document", baseDocumentSchema);
