@@ -108,6 +108,16 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    employeeEmail: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    employeeNumber: {
+      type: Number,
+      required: true,
+      trim:true
+    },
     company: {
       type: String,
       required: true,
@@ -140,6 +150,12 @@ const baseDocumentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    paymentStatus: {
+      type: String,
+      enum: ["Paid", "Pending"],
+      default: "Pending",
+      required:true
+    }
 
   },
   options
