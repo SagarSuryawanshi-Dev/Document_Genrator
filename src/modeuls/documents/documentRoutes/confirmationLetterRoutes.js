@@ -7,21 +7,21 @@ import {
   deleteConfirmationLetter,
 } from "../documentController/confirmationLetterController.js";
 
-const router = express.Router();
+const confirmationLetterRouters = express.Router();
 
 /* CREATE */
-router.post("/create", createConfirmationLetter);
+confirmationLetterRouters.post("/generate", createConfirmationLetter);
 
 /* GET ALL */
-router.get("/", getAllConfirmationLetters);
+confirmationLetterRouters.get("/all-letters", getAllConfirmationLetters);
 
 /* GET BY ID */
-router.get("/:id", getConfirmationLetterById);
+confirmationLetterRouters.get("/user/:id", getConfirmationLetterById);
 
 /* UPDATE */
-router.put("/update/:id", updateConfirmationLetter);
+confirmationLetterRouters.put("/update/:id", updateConfirmationLetter);
 
 /* DELETE */
-router.delete("/delete/:id", deleteConfirmationLetter);
+confirmationLetterRouters.delete("/delete/:id", deleteConfirmationLetter);
 
-export default router;
+export default confirmationLetterRouters;

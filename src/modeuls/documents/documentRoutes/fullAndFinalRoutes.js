@@ -8,21 +8,21 @@ import {
   deleteFullAndFinalLetter,
 } from "../documentController/fullandFinalLetterController.js";
 
-const router = express.Router();
+const fullAndFinalRouters = express.Router();
 
 /* ================= CREATE ================= */
-router.post("/", createFullAndFinalLetter);
+fullAndFinalRouters.post("/generate", createFullAndFinalLetter);
 
 /* ================= GET ALL ================= */
-router.get("/", getAllFullAndFinalLetters);
+fullAndFinalRouters.get("/all-letters", getAllFullAndFinalLetters);
 
 /* ================= GET SINGLE ================= */
-router.get("/:id", getFullAndFinalLetterById);
+fullAndFinalRouters.get("/user/:id", getFullAndFinalLetterById);
 
 /* ================= UPDATE ================= */
-router.put("/:id", updateFullAndFinalLetter);
+fullAndFinalRouters.put("/update/:id", updateFullAndFinalLetter);
 
 /* ================= DELETE ================= */
-router.delete("/:id", deleteFullAndFinalLetter);
+fullAndFinalRouters.delete("/delete/:id", deleteFullAndFinalLetter);
 
-export default router;
+export default fullAndFinalRouters;
