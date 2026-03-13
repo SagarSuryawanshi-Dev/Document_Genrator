@@ -7,12 +7,36 @@ import {
   deleteCompletionCertificate,
 } from "../documentController/completionCertificateController.js";
 
-const router = express.Router();
+const completionCertificateRoutes = express.Router();
 
-router.post("/", createCompletionCertificate);
-router.get("/", getAllCompletionCertificates);
-router.get("/:id", getCompletionCertificateById);
-router.put("/:id", updateCompletionCertificate);
-router.delete("/:id", deleteCompletionCertificate);
+// generate completion certificate
+completionCertificateRoutes.post(
+  "/generate",
+  createCompletionCertificate
+);
 
-export default router;
+
+// get all completion certificates
+completionCertificateRoutes.get("/all-certificates", getAllCompletionCertificates)
+
+//  get completion certificate by id 
+completionCertificateRoutes.get(
+  "/user/:id",
+  getCompletionCertificateById
+)
+
+// update completion certificate
+completionCertificateRoutes.put(
+  "/update/:id",
+  updateCompletionCertificate
+)
+
+// delete completion certificate
+completionCertificateRoutes.delete(
+  "/delete/:id",
+  deleteCompletionCertificate
+)
+
+
+
+export default completionCertificateRoutes;
