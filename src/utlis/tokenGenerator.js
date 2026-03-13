@@ -1,5 +1,11 @@
 import jwt from "jsonwebtoken";
 
+
+export const cookieOptionsAccess = {
+  httpOnly: true,
+  
+}
+
 export const generateAccessToken = (user) => {
   return jwt.sign(
     { userId: user._id, role: user.role },
