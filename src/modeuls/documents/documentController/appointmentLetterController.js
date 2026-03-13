@@ -1,12 +1,9 @@
 import AppointmentLetter from "../documentModel/AppointmentLetter.js";
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
-import { generateEmployeeId } from "../../../utlis/generateEmployeedId.js"
+import { generateEmployeeId } from "../../../utlis/generateEmployeedId.js";
 
-
-/* ================= CREATE ================= */
 export const createAppointmentLetter = async (req, res) => {
-  console.log("Controller hit");
   try {
     const body = req.body;
 
@@ -19,6 +16,8 @@ export const createAppointmentLetter = async (req, res) => {
       "company",
       "issuedTo",
       "employeeName",
+      "employeeEmail",
+      "employeeNumber",
       "address",
       "position",
       "joiningDate",
@@ -27,12 +26,11 @@ export const createAppointmentLetter = async (req, res) => {
       "workLocation",
       "reportingManager",
       "appointmentType",
-      "issueDate"
+      "issueDate",
+      "paymentStatus",
     ];
 
-    const missingFields = requiredFields.filter(
-  (field) => body[field] === undefined
-);
+    const missingFields = requiredFields.filter((field) => !body[field]);
 
     if (missingFields.length > 0) {
       throw new AppError(
@@ -40,40 +38,45 @@ export const createAppointmentLetter = async (req, res) => {
         400,
       );
     }
-    const employeeId = await generateEmployeeId(body.company);
-      
-    
 
-    const exists = await AppointmentLetter.findOne({
-      employeeId:employeeId,
+    const existingAppointment = await AppointmentLetter.findOne({
+      employeeEmail: body.employeeEmail,
+      company: body.company,
     });
 
-    if (exists) {
+    if (existingAppointment) {
       throw new AppError(
-        "Appointment letter already exists for this employee",
+        "Appointment letter already generated for this employee",
         409,
       );
     }
 
-    // ✅ CREATE DOCUMENT NUMBER
+    const existingEmployee = await AppointmentLetter.findOne({
+      employeeEmail: body.employeeEmail,
+      company: body.company,
+    });
+
+    let employeeId;
+
+    if (existingEmployee) {
+      employeeId = existingEmployee.employeeId;
+    } else {
+      employeeId = await generateEmployeeId(body.company);
+    }
+
+    
     const letter = await AppointmentLetter.create({
       ...body,
-      employeeId: employeeId,
-      documentNumber: `AL-${Date.now()}`, // 🔥 UNIQUE
+      employeeId,
+      documentNumber: `AL-${Date.now()}`,
     });
-    console.log("appointment letter", letter )
-    sendResponse(
-      res,
-      201,
-      "Appointment letter created successfully",
-      letter
-    );
+
+    sendResponse(res, 201, "Appointment letter created successfully", letter);
   } catch (err) {
     throw new AppError(err.message, 409);
   }
 };
 
-/* ================= READ ALL ================= */
 export const getAllAppointmentLetters = async (req, res) => {
   try {
     const letters = await AppointmentLetter.find()
@@ -93,7 +96,6 @@ export const getAllAppointmentLetters = async (req, res) => {
   }
 };
 
-/* ================= READ ONE ================= */
 export const getAppointmentLetterById = async (req, res) => {
   try {
     const letter = await AppointmentLetter.findById(req.params.id).populate(
@@ -119,7 +121,6 @@ export const getAppointmentLetterById = async (req, res) => {
   }
 };
 
-/* ================= UPDATE ================= */
 export const updateAppointmentLetter = async (req, res) => {
   try {
     const updated = await AppointmentLetter.findByIdAndUpdate(
@@ -148,7 +149,6 @@ export const updateAppointmentLetter = async (req, res) => {
   }
 };
 
-/* ================= DELETE ================= */
 export const deleteAppointmentLetter = async (req, res) => {
   try {
     const deleted = await AppointmentLetter.findByIdAndDelete(req.params.id);
