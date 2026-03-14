@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 
 
-=======
->>>>>>> 7986e84ca647eb300c95b161d244b7d8d65c5b45
 import mongoose from "mongoose";
 
 const options = {
@@ -29,7 +26,6 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-<<<<<<< HEAD
     employeeEmail: {
       type: String,
       required: true,
@@ -39,12 +35,6 @@ const baseDocumentSchema = new mongoose.Schema(
       type: Number,
       required: true,
       trim:true
-=======
-    email: {
-      type: String,
-      required: true,
-      trim: true,
->>>>>>> 7986e84ca647eb300c95b161d244b7d8d65c5b45
     },
     company: {
       type: String,
@@ -78,7 +68,6 @@ const baseDocumentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-<<<<<<< HEAD
     paymentStatus: {
       type: String,
       enum: ["Paid", "Pending"],
@@ -86,8 +75,6 @@ const baseDocumentSchema = new mongoose.Schema(
       required:true
     }
 
-=======
->>>>>>> 7986e84ca647eb300c95b161d244b7d8d65c5b45
   },
   options,
 );
@@ -107,10 +94,6 @@ baseDocumentSchema.index({
   company: 1,
 });
 
-<<<<<<< HEAD
 const Document = mongoose.model("Document", baseDocumentSchema);
 
 export default Document;
-=======
-export default mongoose.model("Document", baseDocumentSchema);
->>>>>>> 7986e84ca647eb300c95b161d244b7d8d65c5b45
