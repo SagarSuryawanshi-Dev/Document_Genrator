@@ -1,15 +1,18 @@
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 7986e84ca647eb300c95b161d244b7d8d65c5b45
 import mongoose from "mongoose";
 
 const options = {
   discriminatorKey: "documentType",
   timestamps: true,
 };
-  
+
 const baseDocumentSchema = new mongoose.Schema(
   {
-        title: {
+    title: {
       type: String,
       enum: ["Mr.", "Mrs.", "Miss.", "Mx."],
       required: true,
@@ -26,6 +29,7 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+<<<<<<< HEAD
     employeeEmail: {
       type: String,
       required: true,
@@ -35,6 +39,12 @@ const baseDocumentSchema = new mongoose.Schema(
       type: Number,
       required: true,
       trim:true
+=======
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+>>>>>>> 7986e84ca647eb300c95b161d244b7d8d65c5b45
     },
     company: {
       type: String,
@@ -59,15 +69,16 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-     issuedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    // required: true
-  },
+    issuedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      // required: true
+    },
     documentNumber: {
       type: String,
       trim: true,
     },
+<<<<<<< HEAD
     paymentStatus: {
       type: String,
       enum: ["Paid", "Pending"],
@@ -75,8 +86,10 @@ const baseDocumentSchema = new mongoose.Schema(
       required:true
     }
 
+=======
+>>>>>>> 7986e84ca647eb300c95b161d244b7d8d65c5b45
   },
-  options
+  options,
 );
 
 // 🔐 UNIQUE documentNumber ONLY when exists
@@ -87,13 +100,17 @@ baseDocumentSchema.index(
     partialFilterExpression: {
       documentNumber: { $exists: true, $ne: null },
     },
-  }
+  },
 );
 baseDocumentSchema.index({
   employeeEmail: 1,
   company: 1,
 });
 
+<<<<<<< HEAD
 const Document = mongoose.model("Document", baseDocumentSchema);
 
 export default Document;
+=======
+export default mongoose.model("Document", baseDocumentSchema);
+>>>>>>> 7986e84ca647eb300c95b161d244b7d8d65c5b45
