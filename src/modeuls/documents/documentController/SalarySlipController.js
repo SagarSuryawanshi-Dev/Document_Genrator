@@ -166,7 +166,7 @@ export const getAllSalarySlips = async (req, res) => {
   try {
     const slips = await SalarySlip.find()
       .populate("company", "companyName")
-      .populate("createdBy", "name email")
+      .populate("createdBy", "name email") // issued by instead of createdBy for better clarity
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -191,7 +191,7 @@ export const getSalarySlipById = async (req, res) => {
   try {
     const slip = await SalarySlip.findById(req.params.id)
       .populate("company", "companyName")
-      .populate("createdBy", "name email");
+      .populate("createdBy", "name email"); // issued by instead of createdBy for better clarity
 
     if (!slip) {
       return res.status(404).json({
