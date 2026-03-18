@@ -7,7 +7,7 @@ export const createRelievingLetter = async (req, res) => {
     const data = req.body;
 
     const {
-      mrms,
+      title,
       employeeName,
       employeeId,
       designation,
@@ -18,7 +18,7 @@ export const createRelievingLetter = async (req, res) => {
     } = data;
 
     if (
-      !mrms ||
+      !title ||
       !employeeName ||
       !employeeId ||
       !designation ||
@@ -112,8 +112,8 @@ export const getRelievingLetterById = async (req, res) => {
     const { id } = req.params;
 
     const letter = await RelievingLetter.findById(id).populate(
-      "createdBy",
-      "name email"
+      "issuedBy",
+      "name email",
     );
 
     if (!letter) {

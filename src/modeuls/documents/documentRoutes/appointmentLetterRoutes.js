@@ -12,7 +12,7 @@ const appointmentLetterRoutes = express.Router();
 // generate appointment letter
 appointmentLetterRoutes.post(
   "/generate",
-  createAppointmentLetter,
+  createAppointmentLetter, 
 );
 
 // get all appointment letter

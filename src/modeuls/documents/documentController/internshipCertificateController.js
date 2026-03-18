@@ -1,4 +1,4 @@
-import InternshipCertificate from "../models/InternshipCertificate.js";
+import InternshipCertificate from "../../documents/documentModel/InternshipCertificate.js";
 
 /* ================= CREATE ================= */
 
@@ -110,7 +110,7 @@ export const getInternshipCertificateById = async (req, res) => {
 
     const certificate = await InternshipCertificate.findById(id).populate(
       "createdBy",
-      "name email"
+      "name email",
     );
 
     if (!certificate) {
@@ -146,7 +146,7 @@ export const updateInternshipCertificate = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     if (!updated) {
