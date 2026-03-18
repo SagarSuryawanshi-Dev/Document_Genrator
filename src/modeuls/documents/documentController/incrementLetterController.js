@@ -1,43 +1,57 @@
 import IncrementLetter from "../documentModel/IncrementLetter.js";
+import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
+import AppError from "../../../utlis/apiError.js";
+import sendResponse from "../../../utlis/apiResponse.js";
 
 /* ================= CREATE ================= */
 
-export const createIncrementLetter = async (req, res) => {
+export const createIncrementLetter = async (req, res, next) => {
   try {
-    const data = req.body;
+    const body = req.body;
+
+    if (!body || Object.keys(body).length === 0) {
+      throw new AppError("Request body is missing", 400);
+    }
 
     const {
-      mrms,
+      company,
+      issuedTo,
+      title,
       employeeName,
-      employeeId,
+      email,
       designation,
+      performanceYear,
       newCTC,
+      incrementPercentage,
       effectiveDate,
       incrementType,
       issueDate,
-      performanceYear,
-      company,
-    } = data;
+    } = body;
+
+    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
+
+    const employeeId = await getOrCreateEmployeeId(email, company);
+    body.employeeId = employeeId;
+
+    /* ===== REQUIRED FIELD VALIDATION ===== */
 
     if (
-      !mrms ||
+      !company ||
+      !issuedTo ||
+      !title ||
       !employeeName ||
-      !employeeId ||
       !designation ||
+      !performanceYear ||
       !newCTC ||
       !effectiveDate ||
       !incrementType ||
-      !issueDate ||
-      !performanceYear ||
-      !company
+      !issueDate
     ) {
-      return res.status(400).json({
-        success: false,
-        message: "Required fields are missing",
-      });
+      throw new AppError("Please fill all required fields", 400);
     }
 
-    /* check duplicate increment */
+    /* ===== DUPLICATE CHECK ===== */
+
     const existing = await IncrementLetter.findOne({
       company,
       employeeId,
@@ -45,106 +59,64 @@ export const createIncrementLetter = async (req, res) => {
     });
 
     if (existing) {
-      return res.status(409).json({
-        success: false,
-        message: "Increment already issued for this employee on this date",
-      });
+      throw new AppError(
+        "Increment already issued for this employee on this date",
+        409,
+      );
     }
 
-    /* attach logged in user */
-    if (req.user) {
-      data.createdBy = req.user.id;
-    }
+    /* ===== GENERATE DOCUMENT NUMBER ===== */
 
-    /* generate document number */
-    const count = await IncrementLetter.countDocuments();
+    body.documentNumber = `INC-${employeeId}-${Date.now()}`;
 
-    data.documentNumber = `INC-${new Date().getFullYear()}-${String(
-      count + 1
-    ).padStart(4, "0")}`;
+    /* ===== CREATE DOCUMENT ===== */
 
-    const letter = await IncrementLetter.create(data);
+    const letter = await IncrementLetter.create(body);
 
-    res.status(201).json({
-      success: true,
-      message: "Increment Letter created successfully",
-      data: letter,
-    });
+    return sendResponse(
+      res,
+      201,
+      "Increment Letter created successfully",
+      letter,
+    );
   } catch (error) {
-    console.error("CREATE INCREMENT LETTER ERROR:", error);
-
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "Duplicate increment detected",
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
-
 /* ================= GET ALL ================= */
 
-export const getAllIncrementLetters = async (req, res) => {
+export const getAllIncrementLetters = async (req, res, next) => {
   try {
-    const letters = await IncrementLetter.find()
-      .populate("createdBy", "name email")
-      .sort({ createdAt: -1 });
+    const letters = await IncrementLetter.find().sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
+    return sendResponse(res, 200, "Increment letters fetched successfully", {
       count: letters.length,
-      data: letters,
+      letters,
     });
   } catch (error) {
-    console.error("GET ALL ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
-
 /* ================= GET BY ID ================= */
 
-export const getIncrementLetterById = async (req, res) => {
+export const getIncrementLetterById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const letter = await IncrementLetter.findById(id).populate(
-      "createdBy",
-      "name email"
-    );
+    const letter = await IncrementLetter.findById(id);
 
     if (!letter) {
-      return res.status(404).json({
-        success: false,
-        message: "Increment letter not found",
-      });
+      throw new AppError("Increment letter not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      data: letter,
-    });
+    return sendResponse(res, 200, "Increment letter fetched", letter);
   } catch (error) {
-    console.error("GET BY ID ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
-
 /* ================= UPDATE ================= */
 
-export const updateIncrementLetter = async (req, res) => {
+export const updateIncrementLetter = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -154,52 +126,32 @@ export const updateIncrementLetter = async (req, res) => {
     });
 
     if (!updated) {
-      return res.status(404).json({
-        success: false,
-        message: "Increment letter not found",
-      });
+      throw new AppError("Increment letter not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Increment letter updated successfully",
-      data: updated,
-    });
+    return sendResponse(
+      res,
+      200,
+      "Increment letter updated successfully",
+      updated,
+    );
   } catch (error) {
-    console.error("UPDATE ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
-
 /* ================= DELETE ================= */
-
-export const deleteIncrementLetter = async (req, res) => {
+export const deleteIncrementLetter = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const deleted = await IncrementLetter.findByIdAndDelete(id);
 
     if (!deleted) {
-      return res.status(404).json({
-        success: false,
-        message: "Increment letter not found",
-      });
+      throw new AppError("Increment letter not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Increment letter deleted successfully",
-    });
+    return sendResponse(res, 200, "Increment letter deleted successfully");
   } catch (error) {
-    console.error("DELETE ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };

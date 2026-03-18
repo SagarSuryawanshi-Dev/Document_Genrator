@@ -1,200 +1,152 @@
 import RelievingLetter from "../documentModel/RelievingLetter.js";
+import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
+import AppError from "../../../utlis/apiError.js";
+import sendResponse from "../../../utlis/apiResponse.js";
 
 /* ================= CREATE ================= */
 
-export const createRelievingLetter = async (req, res) => {
+export const createRelievingLetter = async (req, res, next) => {
   try {
-    const data = req.body;
+    const body = req.body;
+
+    if (!body || Object.keys(body).length === 0) {
+      throw new AppError("Request body is missing", 400);
+    }
 
     const {
-      mrms,
+      company,
+      issuedTo,
+      title,
       employeeName,
-      employeeId,
+      email,
       designation,
       joiningDate,
       lastWorkingDay,
       issueDate,
-      company,
-    } = data;
+    } = body;
 
+    /* generate employeeId */
+    const employeeId = await getOrCreateEmployeeId(email, company);
+    body.employeeId = employeeId;
+
+    /* validation */
     if (
-      !mrms ||
+      !company ||
+      !issuedTo ||
+      !title ||
       !employeeName ||
-      !employeeId ||
       !designation ||
       !joiningDate ||
       !lastWorkingDay ||
-      !issueDate ||
-      !company
+      !issueDate
     ) {
-      return res.status(400).json({
-        success: false,
-        message: "Required fields are missing",
-      });
+      throw new AppError("Please fill all required fields", 400);
     }
 
-    /* prevent duplicate employee relieving */
-    const existing = await RelievingLetter.findOne({
+    /* prevent duplicate relieving letter */
+    const existingLetter = await RelievingLetter.findOne({
       company,
       employeeId,
       lastWorkingDay,
     });
 
-    if (existing) {
-      return res.status(409).json({
-        success: false,
-        message: "Relieving letter already exists for this employee",
-      });
-    }
-
-    /* attach logged-in user */
-    if (req.user) {
-      data.createdBy = req.user.id;
+    if (existingLetter) {
+      throw new AppError(
+        "Relieving letter already exists for this employee",
+        409,
+      );
     }
 
     /* generate document number */
-    const count = await RelievingLetter.countDocuments();
+    body.documentNumber = `REL-${employeeId}-${Date.now()}`;
 
-    data.documentNumber = `REL-${new Date().getFullYear()}-${String(
-      count + 1
-    ).padStart(4, "0")}`;
+    const newLetter = await RelievingLetter.create(body);
 
-    const letter = await RelievingLetter.create(data);
-
-    return res.status(201).json({
-      success: true,
-      message: "Relieving Letter created successfully",
-      data: letter,
-    });
+    return sendResponse(
+      res,
+      201,
+      "Relieving Letter created successfully",
+      newLetter,
+    );
   } catch (error) {
-    console.error("CREATE RELIEVING LETTER ERROR:", error);
-
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "Duplicate document number detected",
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
+
 /* ================= GET ALL ================= */
 
-export const getAllRelievingLetters = async (req, res) => {
+export const getAllRelievingLetters = async (req, res, next) => {
   try {
-    const letters = await RelievingLetter.find()
-      .populate("createdBy", "name email")
-      .sort({ createdAt: -1 });
+    const letters = await RelievingLetter.find().sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
+    return sendResponse(res, 200, "Relieving letters fetched successfully", {
       count: letters.length,
-      data: letters,
+      letters,
     });
   } catch (error) {
-    console.error("GET ALL ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
 
 /* ================= GET BY ID ================= */
 
-export const getRelievingLetterById = async (req, res) => {
+export const getRelievingLetterById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const letter = await RelievingLetter.findById(id).populate(
-      "createdBy",
-      "name email"
-    );
+    const letter = await RelievingLetter.findById(id);
 
     if (!letter) {
-      return res.status(404).json({
-        success: false,
-        message: "Relieving letter not found",
-      });
+      throw new AppError("Relieving Letter not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      data: letter,
-    });
+    return sendResponse(res, 200, "Relieving letter fetched", letter);
   } catch (error) {
-    console.error("GET BY ID ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
 
 /* ================= UPDATE ================= */
 
-export const updateRelievingLetter = async (req, res) => {
+export const updateRelievingLetter = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const updated = await RelievingLetter.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const updatedLetter = await RelievingLetter.findByIdAndUpdate(
+      id,
+      req.body,
+      { new: true, runValidators: true },
+    );
 
-    if (!updated) {
-      return res.status(404).json({
-        success: false,
-        message: "Relieving letter not found",
-      });
+    if (!updatedLetter) {
+      throw new AppError("Relieving Letter not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Relieving letter updated successfully",
-      data: updated,
-    });
+    return sendResponse(
+      res,
+      200,
+      "Relieving Letter updated successfully",
+      updatedLetter,
+    );
   } catch (error) {
-    console.error("UPDATE ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
 
 /* ================= DELETE ================= */
 
-export const deleteRelievingLetter = async (req, res) => {
+export const deleteRelievingLetter = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const deleted = await RelievingLetter.findByIdAndDelete(id);
+    const deletedLetter = await RelievingLetter.findByIdAndDelete(id);
 
-    if (!deleted) {
-      return res.status(404).json({
-        success: false,
-        message: "Relieving letter not found",
-      });
+    if (!deletedLetter) {
+      throw new AppError("Relieving Letter not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Relieving letter deleted successfully",
-    });
+    return sendResponse(res, 200, "Relieving Letter deleted successfully");
   } catch (error) {
-    console.error("DELETE ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };

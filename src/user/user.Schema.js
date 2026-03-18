@@ -14,10 +14,12 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
     },
     password: {
       type: String,
       required: [true, "Password is required"],
+      minlength: [6, "Password must be at least 6 characters"],
       select: false,
     },
     role: {
@@ -26,7 +28,11 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
   },
-  { timestamps: true },
+  { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
 );
 
-export default mongoose.model("User", userSchema); 
+export default mongoose.model("User", userSchema);

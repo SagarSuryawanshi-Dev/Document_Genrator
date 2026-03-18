@@ -1,15 +1,13 @@
-
-
 import mongoose from "mongoose";
 
 const options = {
   discriminatorKey: "documentType",
   timestamps: true,
 };
-  
+
 const baseDocumentSchema = new mongoose.Schema(
   {
-        title: {
+    title: {
       type: String,
       enum: ["Mr.", "Mrs.", "Miss.", "Mx."],
       required: true,
@@ -26,15 +24,10 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    employeeEmail: {
+    email: {
       type: String,
       required: true,
-      trim: true
-    },
-    employeeNumber: {
-      type: Number,
-      required: true,
-      trim:true
+      trim: true,
     },
     company: {
       type: String,
@@ -59,24 +52,17 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-     issuedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    // required: true
-  },
+    issuedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      // required: true
+    },
     documentNumber: {
       type: String,
       trim: true,
     },
-    paymentStatus: {
-      type: String,
-      enum: ["Paid", "Pending"],
-      default: "Pending",
-      required:true
-    }
-
   },
-  options
+  options,
 );
 
 // 🔐 UNIQUE documentNumber ONLY when exists
@@ -87,13 +73,11 @@ baseDocumentSchema.index(
     partialFilterExpression: {
       documentNumber: { $exists: true, $ne: null },
     },
-  }
+  },
 );
 baseDocumentSchema.index({
   employeeEmail: 1,
   company: 1,
 });
 
-const Document = mongoose.model("Document", baseDocumentSchema);
-
-export default Document;
+export default mongoose.model("Document", baseDocumentSchema);

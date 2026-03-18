@@ -3,7 +3,6 @@ import Document from "./BaseDocument.js";
 
 const appointmentLetterSchema = new mongoose.Schema(
   {
-
     address: {
       type: String,
       required: true,
@@ -43,7 +42,6 @@ const appointmentLetterSchema = new mongoose.Schema(
 
     reportingManager: {
       type: String,
-     
     },
 
     workHours: {
@@ -62,10 +60,10 @@ const appointmentLetterSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default Document.discriminator(
   "AppointmentLetter",
-  appointmentLetterSchema
+  appointmentLetterSchema,
 );

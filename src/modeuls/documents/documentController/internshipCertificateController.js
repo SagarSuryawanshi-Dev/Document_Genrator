@@ -1,41 +1,53 @@
 import InternshipCertificate from "../documentModel/InternshipCertificate.js";
+import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
+import AppError from "../../../utlis/apiError.js";
+import sendResponse from "../../../utlis/apiResponse.js";
 
 /* ================= CREATE ================= */
 
-export const createInternshipCertificate = async (req, res) => {
+export const createInternshipCertificate = async (req, res, next) => {
   try {
-    const data = req.body;
+    const body = req.body;
+
+    if (!body || Object.keys(body).length === 0) {
+      throw new AppError("Request body is missing", 400);
+    }
 
     const {
-      mrms,
+      company,
+      issuedTo,
+      title,
       employeeName,
-      employeeId,
+      email,
       designation,
+      address,
       internshipType,
+      stipend,
       startDate,
       endDate,
       issueDate,
-      company,
-    } = data;
+    } = body;
 
+    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
+    const employeeId = await getOrCreateEmployeeId(email, company);
+    body.employeeId = employeeId;
+
+    /* ===== REQUIRED FIELD VALIDATION ===== */
     if (
-      !mrms ||
+      !company ||
+      !issuedTo ||
+      !title ||
       !employeeName ||
-      !employeeId ||
       !designation ||
       !internshipType ||
       !startDate ||
       !endDate ||
-      !issueDate ||
-      !company
+      !issueDate
     ) {
-      return res.status(400).json({
-        success: false,
-        message: "Required fields are missing",
-      });
+      throw new AppError("Please fill all required fields", 400);
     }
 
-    /* prevent duplicate */
+    /* ===== DUPLICATE CHECK ===== */
     const existing = await InternshipCertificate.findOne({
       company,
       employeeId,
@@ -44,158 +56,119 @@ export const createInternshipCertificate = async (req, res) => {
     });
 
     if (existing) {
-      return res.status(409).json({
-        success: false,
-        message: "Internship certificate already exists for this employee",
-      });
+      throw new AppError(
+        "Internship certificate already exists for this employee",
+        409,
+      );
     }
 
-    /* attach logged-in user if available */
-    if (req.user) {
-      data.createdBy = req.user.id;
-    }
+    /* ===== GENERATE DOCUMENT NUMBER ===== */
+    body.documentNumber = `INT-${employeeId}-${Date.now()}`;
 
-    const certificate = await InternshipCertificate.create(data);
+    /* ===== CREATE DOCUMENT ===== */
+    const certificate = await InternshipCertificate.create(body);
 
-    res.status(201).json({
-      success: true,
-      message: "Internship Certificate created successfully",
-      data: certificate,
-    });
+    return sendResponse(
+      res,
+      201,
+      "Internship Certificate created successfully",
+      certificate,
+    );
   } catch (error) {
-    console.error("CREATE ERROR:", error);
-
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "Duplicate internship certificate detected",
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
 
 /* ================= GET ALL ================= */
 
-export const getAllInternshipCertificates = async (req, res) => {
+export const getAllInternshipCertificates = async (req, res, next) => {
   try {
-    const certificates = await InternshipCertificate.find()
-      .populate("createdBy", "name email")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      count: certificates.length,
-      data: certificates,
+    const certificates = await InternshipCertificate.find().sort({
+      createdAt: -1,
     });
+
+    return sendResponse(
+      res,
+      200,
+      "Internship certificates fetched successfully",
+      {
+        count: certificates.length,
+        certificates,
+      },
+    );
   } catch (error) {
-    console.error("GET ALL ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
 
 /* ================= GET BY ID ================= */
 
-export const getInternshipCertificateById = async (req, res) => {
+export const getInternshipCertificateById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const certificate = await InternshipCertificate.findById(id).populate(
-      "createdBy",
-      "name email"
-    );
+    const certificate = await InternshipCertificate.findById(id);
 
     if (!certificate) {
-      return res.status(404).json({
-        success: false,
-        message: "Internship certificate not found",
-      });
+      throw new AppError("Internship certificate not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      data: certificate,
-    });
+    return sendResponse(
+      res,
+      200,
+      "Internship certificate fetched",
+      certificate,
+    );
   } catch (error) {
-    console.error("GET BY ID ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
 
 /* ================= UPDATE ================= */
 
-export const updateInternshipCertificate = async (req, res) => {
+export const updateInternshipCertificate = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const updated = await InternshipCertificate.findByIdAndUpdate(
       id,
       req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
+      { new: true, runValidators: true },
     );
 
     if (!updated) {
-      return res.status(404).json({
-        success: false,
-        message: "Internship certificate not found",
-      });
+      throw new AppError("Internship certificate not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Internship certificate updated successfully",
-      data: updated,
-    });
+    return sendResponse(
+      res,
+      200,
+      "Internship certificate updated successfully",
+      updated,
+    );
   } catch (error) {
-    console.error("UPDATE ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
 
 /* ================= DELETE ================= */
 
-export const deleteInternshipCertificate = async (req, res) => {
+export const deleteInternshipCertificate = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const deleted = await InternshipCertificate.findByIdAndDelete(id);
 
     if (!deleted) {
-      return res.status(404).json({
-        success: false,
-        message: "Internship certificate not found",
-      });
+      throw new AppError("Internship certificate not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Internship certificate deleted successfully",
-    });
+    return sendResponse(
+      res,
+      200,
+      "Internship certificate deleted successfully",
+    );
   } catch (error) {
-    console.error("DELETE ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
