@@ -1,75 +1,24 @@
-// import salarySlipSchema from "../documentModel/SalarySlip.js";
-
-// export const createSalarySlip = async (req,res) => {
-//    try {
-//     const {
-//       mrms,
-//       employeeName,
-//       employeeId,
-//       designation,
-//       department,
-//       month,
-//       totalSalary,
-//       doj,
-//       pan,
-//       gender,
-//       mode,
-//       workdays,
-//       dob,
-//       salaryType,
-//       accountNo,
-//     } = req.body;
-
-//     if (
-//       !employeeName ||
-//       !employeeId ||
-//       !month ||
-//       !totalSalary
-//     ) {
-//       return next(new AppError("Required fields missing", 400));
-//     }
-
-//     const salarySlip = await SalarySlip.create({
-//       ...req.body,
-//       createdBy: req.user?._id,
-//       company: req.user?.company, // assuming company exists in base schema
-//     });
-
-//     return sendResponse(
-//       res,
-//       201,
-//       true,
-//       "Salary slip created successfully",
-//       salarySlip
-//     );
-
-//   } catch (error) {
-//     if (error.code === 11000) {
-//       return next(
-//         new AppError("Salary slip already exists for this month", 400)
-//       );
-//     }
-
-//     return next(new AppError(error.message, 500));
-//   }
-// }
-
-
-
-
-
 import SalarySlip from "../documentModel/SalarySlip.js";
+import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
+import AppError from "../../../utlis/apiError.js";
+import sendResponse from "../../../utlis/apiResponse.js";
 
 /* ================= CREATE ================= */
 
-export const createSalarySlip = async (req, res) => {
+export const createSalarySlip = async (req, res, next) => {
   try {
-    const data = req.body;
+    const body = req.body;
+
+    if (!body || Object.keys(body).length === 0) {
+      throw new AppError("Request body is missing", 400);
+    }
 
     const {
-      mrms,
+      company,
+      issuedTo,
+      title,
       employeeName,
-      employeeId,
+      email,
       designation,
       department,
       month,
@@ -82,13 +31,19 @@ export const createSalarySlip = async (req, res) => {
       dob,
       salaryType,
       accountNo,
-      company,
-    } = data;
+    } = body;
+
+    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
+    const employeeId = await getOrCreateEmployeeId(email, company);
+    body.employeeId = employeeId;
+
+    /* ===== REQUIRED FIELD VALIDATION ===== */
 
     if (
-      !mrms ||
+      !company ||
+      !issuedTo ||
+      !title ||
       !employeeName ||
-      !employeeId ||
       !designation ||
       !department ||
       !month ||
@@ -100,180 +55,104 @@ export const createSalarySlip = async (req, res) => {
       !workdays ||
       !dob ||
       !salaryType ||
-      !accountNo ||
-      !company
+      !accountNo
     ) {
-      return res.status(400).json({
-        success: false,
-        message: "All required fields must be provided",
-      });
+      throw new AppError("Please fill all required fields", 400);
     }
 
-    /* prevent duplicate salary slip */
+    /* ===== DUPLICATE CHECK ===== */
+
     const existing = await SalarySlip.findOne({
+      company,
       employeeId,
       month,
-      company,
     });
 
     if (existing) {
-      return res.status(409).json({
-        success: false,
-        message: "Salary slip already exists for this employee in this month",
-      });
+      throw new AppError(
+        "Salary slip already exists for this employee in this month",
+        409,
+      );
     }
 
-    /* attach logged-in user */
-    if (req.user) {
-      data.createdBy = req.user.id;
-    }
+    /* ===== DOCUMENT NUMBER ===== */
 
-    /* generate document number */
-    const count = await SalarySlip.countDocuments();
+    body.documentNumber = `SAL-${employeeId}-${Date.now()}`;
 
-    data.documentNumber = `SAL-${new Date().getFullYear()}-${String(
-      count + 1
-    ).padStart(4, "0")}`;
+    /* ===== CREATE ===== */
 
-    const slip = await SalarySlip.create(data);
+    const slip = await SalarySlip.create(body);
 
-    return res.status(201).json({
-      success: true,
-      message: "Salary Slip created successfully",
-      data: slip,
-    });
+    return sendResponse(res, 201, "Salary Slip created successfully", slip);
   } catch (error) {
-    console.error("CREATE SALARY SLIP ERROR:", error);
-
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "Duplicate salary slip detected",
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
-
 
 /* ================= GET ALL ================= */
 
-export const getAllSalarySlips = async (req, res) => {
+export const getAllSalarySlips = async (req, res, next) => {
   try {
-    const slips = await SalarySlip.find()
-      .populate("company", "companyName")
-      .populate("createdBy", "name email")
-      .sort({ createdAt: -1 });
+    const slips = await SalarySlip.find().sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
+    return sendResponse(res, 200, "Salary slips fetched successfully", {
       count: slips.length,
-      data: slips,
+      slips,
     });
   } catch (error) {
-    console.error("GET SALARY SLIPS ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
-
 
 /* ================= GET ONE ================= */
-
-export const getSalarySlipById = async (req, res) => {
+export const getSalarySlipById = async (req, res, next) => {
   try {
-    const slip = await SalarySlip.findById(req.params.id)
-      .populate("company", "companyName")
-      .populate("createdBy", "name email");
+    const { id } = req.params;
+
+    const slip = await SalarySlip.findById(id);
 
     if (!slip) {
-      return res.status(404).json({
-        success: false,
-        message: "Salary slip not found",
-      });
+      throw new AppError("Salary slip not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      data: slip,
-    });
+    return sendResponse(res, 200, "Salary slip fetched", slip);
   } catch (error) {
-    console.error("GET SALARY SLIP ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
-
 
 /* ================= UPDATE ================= */
-
-export const updateSalarySlip = async (req, res) => {
+export const updateSalarySlip = async (req, res, next) => {
   try {
-    const slip = await SalarySlip.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    const { id } = req.params;
+
+    const slip = await SalarySlip.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!slip) {
-      return res.status(404).json({
-        success: false,
-        message: "Salary slip not found",
-      });
+      throw new AppError("Salary slip not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Salary slip updated successfully",
-      data: slip,
-    });
+    return sendResponse(res, 200, "Salary slip updated successfully", slip);
   } catch (error) {
-    console.error("UPDATE SALARY SLIP ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };
-
-
 /* ================= DELETE ================= */
-
-export const deleteSalarySlip = async (req, res) => {
+export const deleteSalarySlip = async (req, res, next) => {
   try {
-    const slip = await SalarySlip.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+
+    const slip = await SalarySlip.findByIdAndDelete(id);
 
     if (!slip) {
-      return res.status(404).json({
-        success: false,
-        message: "Salary slip not found",
-      });
+      throw new AppError("Salary slip not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Salary slip deleted successfully",
-    });
+    return sendResponse(res, 200, "Salary slip deleted successfully");
   } catch (error) {
-    console.error("DELETE SALARY SLIP ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    next(error);
   }
 };

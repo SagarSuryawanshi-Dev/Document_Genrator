@@ -1,54 +1,56 @@
-
 import ConfirmationLetter from "../documentModel/ConfirmationLetter.js";
+import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
+import AppError from "../../../utlis/apiError.js";
+import sendResponse from "../../../utlis/apiResponse.js";
 
 /* ================= CREATE ================= */
-export const createConfirmationLetter = async (req, res) => {
-  try {
+
+export const createConfirmationLetter = async (req, res, next) => {
+ try {
     const body = req.body;
 
-    /* BODY CHECK */
+    console.log("body:",body)
+
     if (!body || Object.keys(body).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Request body is missing",
-      });
+      throw new AppError("Request body is missing", 400);
     }
 
     const {
       company,
       issuedTo,
-      mrms,
+      title,
       employeeName,
-      employeeId,
+      email,
       effectiveDate,
       issueDate,
       totalSalary,
       position,
       department,
-      address,
       confirmationType,
     } = body;
 
-    /* REQUIRED FIELD VALIDATION */
+    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
+    const employeeId = await getOrCreateEmployeeId(email, company);
+    body.employeeId = employeeId;
+
+    /* ===== REQUIRED FIELD VALIDATION ===== */
+
     if (
       !company ||
       !issuedTo ||
-      !mrms ||
+      !title ||
       !employeeName ||
-      !employeeId ||
       !effectiveDate ||
       !issueDate ||
       !totalSalary ||
       !position ||
       !confirmationType
     ) {
-      return res.status(400).json({
-        success: false,
-        message: "Please fill all required fields",
-      });
+      throw new AppError("Please fill all required fields", 400);
     }
 
-    /* CHECK DUPLICATE */
+    /* ===== DUPLICATE CHECK ===== */
+
     const existing = await ConfirmationLetter.findOne({
       company,
       employeeId,
@@ -56,150 +58,99 @@ export const createConfirmationLetter = async (req, res) => {
     });
 
     if (existing) {
-      return res.status(409).json({
-        success: false,
-        message:
-          "Confirmation letter already exists for this employee on this effective date",
-      });
+      throw new AppError(
+        "Confirmation letter already exists for this employee on this effective date",
+        409,
+      );
     }
 
-    /* GENERATE DOCUMENT NUMBER */
+    /* ===== GENERATE DOCUMENT NUMBER ===== */
+
     body.documentNumber = `CONF-${employeeId}-${Date.now()}`;
 
-    /* CREATE LETTER */
+    /* ===== CREATE LETTER ===== */
+
     const newLetter = await ConfirmationLetter.create(body);
 
-    res.status(201).json({
-      success: true,
-      message: "Confirmation Letter created successfully",
-      data: newLetter,
-    });
+    return sendResponse(
+      res,
+      201,
+      "Confirmation Letter created successfully",
+      newLetter,
+    );
   } catch (error) {
-    console.error("CREATE ERROR:", error);
-
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "Duplicate document detected",
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
 /* ================= GET ALL ================= */
-export const getAllConfirmationLetters = async (req, res) => {
+export const getAllConfirmationLetters = async (req, res, next) => {
   try {
     const letters = await ConfirmationLetter.find().sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
+    return sendResponse(res, 200, "Confirmation letters fetched successfully", {
       count: letters.length,
-      data: letters,
+      letters,
     });
   } catch (error) {
-    console.error("GET ALL ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    next(error);
   }
 };
-
 /* ================= GET BY ID ================= */
-export const getConfirmationLetterById = async (req, res) => {
+export const getConfirmationLetterById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const letter = await ConfirmationLetter.findById(id);
 
     if (!letter) {
-      return res.status(404).json({
-        success: false,
-        message: "Confirmation Letter not found",
-      });
+      throw new AppError("Confirmation Letter not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      data: letter,
-    });
+    return sendResponse(res, 200, "Confirmation letter fetched", letter);
   } catch (error) {
-    console.error("GET BY ID ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    next(error);
   }
 };
-
 /* ================= UPDATE ================= */
-export const updateConfirmationLetter = async (req, res) => {
+export const updateConfirmationLetter = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const updatedLetter = await ConfirmationLetter.findByIdAndUpdate(
       id,
       req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
+      { new: true, runValidators: true },
     );
 
     if (!updatedLetter) {
-      return res.status(404).json({
-        success: false,
-        message: "Confirmation Letter not found",
-      });
+      throw new AppError("Confirmation Letter not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Confirmation Letter updated successfully",
-      data: updatedLetter,
-    });
+    return sendResponse(
+      res,
+      200,
+      "Confirmation Letter updated successfully",
+      updatedLetter,
+    );
   } catch (error) {
-    console.error("UPDATE ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    next(error);
   }
 };
 
 /* ================= DELETE ================= */
-export const deleteConfirmationLetter = async (req, res) => {
+export const deleteConfirmationLetter = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const deletedLetter = await ConfirmationLetter.findByIdAndDelete(id);
 
     if (!deletedLetter) {
-      return res.status(404).json({
-        success: false,
-        message: "Confirmation Letter not found",
-      });
+      throw new AppError("Confirmation Letter not found", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Confirmation Letter deleted successfully",
-    });
+    return sendResponse(res, 200, "Confirmation Letter deleted successfully");
   } catch (error) {
-    console.error("DELETE ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    next(error);
   }
 };

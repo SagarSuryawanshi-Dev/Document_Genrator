@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import Document from "./BaseDocument.js";
 
 const experienceLetterSchema = new mongoose.Schema({
- 
   designation: {
     type: String,
     required: true,
@@ -38,10 +37,10 @@ const experienceLetterSchema = new mongoose.Schema({
  */
 experienceLetterSchema.index(
   { company: 1, employeeId: 1, relievingDate: 1 },
-  { unique: true }
+  { unique: true },
 );
 
 export default Document.discriminator(
   "ExperienceLetter",
-  experienceLetterSchema
+  experienceLetterSchema,
 );

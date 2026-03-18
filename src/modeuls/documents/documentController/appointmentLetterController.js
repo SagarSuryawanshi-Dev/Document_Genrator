@@ -1,10 +1,11 @@
 import AppointmentLetter from "../documentModel/AppointmentLetter.js";
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
-import Document from "../documentModel/BaseDocument.js"
-import { generateEmployeeId } from "../../../utlis/generateEmployeedId.js";
+import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
 
-export const createAppointmentLetter = async (req, res) => {
+/* ================= CREATE ================= */
+
+export const createAppointmentLetter = async (req, res, next) => {
   try {
     const body = req.body;
 
@@ -13,7 +14,23 @@ export const createAppointmentLetter = async (req, res) => {
       throw new AppError("Request body is missing", 400);
     }
 
-    /* 2️⃣ Required fields */
+    const {
+      title,
+      company,
+      issuedTo,
+      employeeName,
+      employeeEmail,
+      address,
+      position,
+      joiningDate,
+      probationPeriod,
+      salary,
+      workLocation,
+      reportingManager,
+      appointmentType,
+      issueDate,
+    } = body;
+
     const requiredFields = [
       "title",
       "employeeName",
@@ -21,6 +38,7 @@ export const createAppointmentLetter = async (req, res) => {
       "employeeNumber",
       "company",
       "issuedTo",
+      "employeeName",
       "address",
       "position",
       "joiningDate",
@@ -29,11 +47,10 @@ export const createAppointmentLetter = async (req, res) => {
       "workLocation",
       "appointmentType",
       "issueDate",
-      "paymentStatus"
     ];
 
     const missingFields = requiredFields.filter(
-      (field) => body[field] === undefined || body[field] === null
+      (field) => body[field] === undefined,
     );
 
     if (missingFields.length > 0) {
@@ -43,13 +60,18 @@ export const createAppointmentLetter = async (req, res) => {
       );
     }
 
-    /* 3️⃣ Check if employee already exists */
-    const existingEmployee = await Document.findOne({
-      employeeEmail: body.employeeEmail,
-      company: body.company
-    });
+    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
 
-    let employeeId;
+    const employeeId = await getOrCreateEmployeeId(email, company);
+    body.employeeId = employeeId;
+
+    /* ===== DUPLICATE CHECK ===== */
+
+    const exists = await AppointmentLetter.findOne({
+      company,
+      employeeId,
+      joiningDate,
+    });
 
     if (existingEmployee) {
       employeeId = existingEmployee.employeeId;
@@ -57,24 +79,24 @@ export const createAppointmentLetter = async (req, res) => {
       employeeId = await generateEmployeeId(body.company);
     }
 
-    /* 4️⃣ Create appointment letter */
-    const appointmentLetter = await AppointmentLetter.create({
+    /* ===== CREATE DOCUMENT ===== */
+
+    const letter = await AppointmentLetter.create({
       ...body,
-      employeeId,
-      documentNumber: `AL-${Date.now()}`
+      documentNumber: `AL-${employeeId}-${Date.now()}`,
     });
 
-    res.status(201).json({
-      success: true,
-      message: "Appointment letter created successfully",
-      data: appointmentLetter
-    });
-
+    return sendResponse(
+      res,
+      201,
+      "Appointment letter created successfully",
+      letter,
+    );
   } catch (error) {
     next(error);
   }
 };
-
+/* ================= READ ALL ================= */
 export const getAllAppointmentLetters = async (req, res) => {
   try {
     const letters = await AppointmentLetter.find()

@@ -7,20 +7,23 @@ import {
   deleteConfirmationLetter,
 } from "../documentController/confirmationLetterController.js";
 
-const confirmationLetterRouters = express.Router();
+const confirmationLetterRoutes = express.Router();
 
-confirmationLetterRouters.post("/generate", createConfirmationLetter);
-
-
-confirmationLetterRouters.get("/all-letters", getAllConfirmationLetters);
+/* CREATE */
+confirmationLetterRoutes.post("/generate", createConfirmationLetter);
 
 
-confirmationLetterRouters.get("/user/:id", getConfirmationLetterById);
+confirmationLetterRoutes.get("/all-letters", getAllConfirmationLetters);
 
 
-confirmationLetterRouters.put("/update/:id", updateConfirmationLetter);
+confirmationLetterRoutes.get("/user/:id", getConfirmationLetterById);
 
 
-confirmationLetterRouters.delete("/delete/:id", deleteConfirmationLetter);
+confirmationLetterRoutes.put("/update/:id", updateConfirmationLetter);
 
-export default confirmationLetterRouters;
+
+confirmationLetterRoutes.delete("/delete/:id", deleteConfirmationLetter);
+
+
+
+export default confirmationLetterRoutes;

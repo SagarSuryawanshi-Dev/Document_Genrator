@@ -6,10 +6,10 @@ const options = {
   discriminatorKey: "documentType",
   timestamps: true,
 };
-  
+
 const baseDocumentSchema = new mongoose.Schema(
   {
-        title: {
+    title: {
       type: String,
       enum: ["Mr.", "Mrs.", "Miss.", "Mx."],
       required: true,
@@ -59,11 +59,11 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-     issuedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    // required: true
-  },
+    issuedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      // required: true
+    },
     documentNumber: {
       type: String,
       trim: true,
@@ -76,7 +76,7 @@ const baseDocumentSchema = new mongoose.Schema(
     }
 
   },
-  options
+  options,
 );
 
 // 🔐 UNIQUE documentNumber ONLY when exists
@@ -87,7 +87,7 @@ baseDocumentSchema.index(
     partialFilterExpression: {
       documentNumber: { $exists: true, $ne: null },
     },
-  }
+  },
 );
 baseDocumentSchema.index({
   employeeEmail: 1,
