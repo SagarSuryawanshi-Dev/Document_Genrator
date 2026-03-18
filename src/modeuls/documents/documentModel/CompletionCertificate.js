@@ -3,8 +3,7 @@ import  Document  from "./BaseDocument.js";
 
 const CompletionCertificateSchema = new mongoose.Schema(
   {
-<<<<<<< HEAD
-=======
+
     title: {
       type: String,
       required: true,
@@ -20,7 +19,7 @@ const CompletionCertificateSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
->>>>>>> 7986e84ca647eb300c95b161d244b7d8d65c5b45
+
     projectName: {
       type: String,
       required: true,
@@ -68,17 +67,15 @@ const CompletionCertificateSchema = new mongoose.Schema(
 );
 
 CompletionCertificateSchema.index(
-<<<<<<< HEAD
   { employeeId: 1,projectName: 1},
-  { unique: true }
-  
-=======
-  { employeeId: 1, projectName: 1 },
   { unique: true },
->>>>>>> 7986e84ca647eb300c95b161d244b7d8d65c5b45
+  
+  { employeeId: 1, projectName: 1 },
+  { unique: true }
+
 );
 
-export const CompletionCertificate = Document.discriminator(
+export default Document.discriminator(
   "CompletionCertificate",
   CompletionCertificateSchema,
 );

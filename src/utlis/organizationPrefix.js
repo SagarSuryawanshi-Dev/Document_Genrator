@@ -7,6 +7,8 @@
   "Neweage Cloud Solution Pvt. Ltd.": "NCS",
   "RP Business Solutions LLP": "RBS",
   "JDIT Software Solutions Pvt. Ltd.": "JDT",
+  "NIMBJA SECURITY SOLUTIONS Pvt. Ltd.": "NSS",
+  "Smart Software Services (I) Pvt. Ltd." : "SSS"
 };
 
 export default companyPrefixes;
