@@ -29,12 +29,6 @@ const CompletionCertificateSchema = new mongoose.Schema(
     completionDate: {
       type: Date,
       required: true,
-      validate: {
-        validator: function (value) {
-          return value >= this.startDate;
-        },
-        message: "Completion date must be after start date",
-      },
     },
     designation: {
       type: String,
