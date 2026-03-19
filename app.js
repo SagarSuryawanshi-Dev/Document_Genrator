@@ -1,11 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
+import dns from "dns";
 import cors from "cors";
 import cookieParser from "cookie-parser"; // ← ADD THIS
 import dbConnection from "./src/config/db.js";
 import userRoutes from "./src/user/user.routes.js";
 import adminRoutes from "./src/admin/admin.router.js";
-import dns from "dns";
 import documentsRoutes from "./src/modeuls/documents/documentRoutes/documentsRoutes.js";
 import errorHandler from "./src/middlewares/errorHandler.js";
 
@@ -36,7 +36,6 @@ app.use("/api/v1/documents", documentsRoutes);
 
 // Error handler must be LAST
 app.use(errorHandler);
-
 app.get("/", (req, res) => {
   res.json("Doc_Gen_Backend");
 });

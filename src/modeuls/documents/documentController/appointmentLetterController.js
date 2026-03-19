@@ -19,7 +19,7 @@ export const createAppointmentLetter = async (req, res, next) => {
       company,
       issuedTo,
       employeeName,
-      email,
+      employeeEmail,
       address,
       position,
       joiningDate,
@@ -39,7 +39,6 @@ export const createAppointmentLetter = async (req, res, next) => {
       "company",
       "issuedTo",
       "employeeName",
-      "email",
       "address",
       "position",
       "joiningDate",
@@ -73,7 +72,6 @@ export const createAppointmentLetter = async (req, res, next) => {
       employeeId,
       joiningDate,
     });
-
 
     if (existingEmployee) {
       employeeId = existingEmployee.employeeId;

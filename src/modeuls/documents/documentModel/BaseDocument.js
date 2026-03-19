@@ -1,3 +1,5 @@
+
+
 import mongoose from "mongoose";
 
 const options = {
@@ -24,10 +26,15 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    email: {
+    employeeEmail: {
       type: String,
       required: true,
-      trim: true,
+      trim: true
+    },
+    employeeNumber: {
+      type: Number,
+      required: true,
+      trim:true
     },
     company: {
       type: String,
@@ -61,6 +68,13 @@ const baseDocumentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    paymentStatus: {
+      type: String,
+      enum: ["Paid", "Pending"],
+      default: "Pending",
+      required:true
+    }
+
   },
   options,
 );
@@ -80,4 +94,6 @@ baseDocumentSchema.index({
   company: 1,
 });
 
-export default mongoose.model("Document", baseDocumentSchema);
+const Document = mongoose.model("Document", baseDocumentSchema);
+
+export default Document;

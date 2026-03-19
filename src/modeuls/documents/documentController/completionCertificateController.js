@@ -205,7 +205,7 @@
 //   }
 // };
 
-import { CompletionCertificate } from "../documentModel/CompletionCertificate.js";
+import CompletionCertificate from "../documentModel/CompletionCertificate.js";
 import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";

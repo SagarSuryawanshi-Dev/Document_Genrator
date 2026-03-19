@@ -65,11 +65,15 @@ const CompletionCertificateSchema = new mongoose.Schema(
 );
 
 CompletionCertificateSchema.index(
-  { employeeId: 1, projectName: 1 },
+  { employeeId: 1,projectName: 1},
   { unique: true },
+  
+
+
 );
 
-export const CompletionCertificate = Document.discriminator(
+export default Document.discriminator(
   "CompletionCertificate",
   CompletionCertificateSchema,
 );
+

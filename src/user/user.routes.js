@@ -18,4 +18,4 @@ router.post("/logout", Logout);
 router.get("/profile/:userId", GetProfile);
 router.put("/profile/:userId", UpdateProfile);
 
-export default router;  
+export default router;

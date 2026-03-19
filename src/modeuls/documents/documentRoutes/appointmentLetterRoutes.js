@@ -10,7 +10,7 @@ import {
 const appointmentLetterRoutes = express.Router();
 
 // generate appointment letter
-appointmentLetterRoutes.post("/", createAppointmentLetter);
+appointmentLetterRoutes.post("/generate", createAppointmentLetter);
 
 // get all appointment letter
 appointmentLetterRoutes.get("/all-letters", getAllAppointmentLetters);
