@@ -9,16 +9,26 @@ export const createFullAndFinalLetter = async (req, res, next) => {
   try {
     const body = req.body;
 
+    // ✅ Auth check
+    if (!req.user) {
+      throw new AppError("User not authenticated", 401);
+    }
+
+    const issuedBy = req.user._id;
+
+    // ✅ Body check
     if (!body || Object.keys(body).length === 0) {
       throw new AppError("Request body is missing", 400);
     }
 
+    // ✅ Destructure
     const {
       company,
       issuedTo,
       title,
       employeeName,
-      email,
+      employeeEmail,
+      employeeNumber,
       designation,
       fnfDate,
       month,
@@ -31,61 +41,109 @@ export const createFullAndFinalLetter = async (req, res, next) => {
       workdays,
     } = body;
 
-    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
+    // ✅ Required fields
+    const requiredFields = [
+      "company",
+      "issuedTo",
+      "title",
+      "employeeName",
+      "employeeEmail",
+      "employeeNumber",
+      "designation",
+      "fnfDate",
+      "month",
+      "totalSalary",
+      "doj",
+      "resignationDate",
+      "leavingDate",
+      "paidDays",
+      "finalType",
+      "workdays",
+    ];
 
-    const employeeId = await getOrCreateEmployeeId(email, company);
-    body.employeeId = employeeId;
+    const missingFields = requiredFields.filter((field) => {
+      const value = body[field];
 
-    /* ===== REQUIRED FIELD VALIDATION ===== */
+      return (
+        value === undefined ||
+        value === null ||
+        (typeof value === "string" && value.trim() === "")
+      );
+    });
 
-    if (
-      !company ||
-      !issuedTo ||
-      !title ||
-      !employeeName ||
-      !designation ||
-      !fnfDate ||
-      !month ||
-      !totalSalary ||
-      !doj ||
-      !resignationDate ||
-      !leavingDate ||
-      !paidDays ||
-      !finalType ||
-      !workdays
-    ) {
-      throw new AppError("Please fill all required fields", 400);
+    if (missingFields.length > 0) {
+      throw new AppError(
+        `Missing required fields: ${missingFields.join(", ")}`,
+        400
+      );
     }
 
-    /* ===== CHECK DUPLICATE ===== */
+    // ✅ Normalize company
+    const cleanCompany = company.trim();
 
+    // ✅ Generate employeeId
+    const employeeId = await getOrCreateEmployeeId(
+      employeeEmail,
+      cleanCompany
+    );
+
+    // ✅ Duplicate check
     const existing = await FullAndFinalLetter.findOne({
-      company,
-      employeeId,
+      employeeEmail,
+      company: cleanCompany,
       leavingDate,
     });
 
     if (existing) {
       throw new AppError(
-        "Full & Final already exists for this employee with this leaving date",
-        409,
+        "Full & Final already exists for this employee",
+        409
       );
     }
 
-    /* ===== GENERATE DOCUMENT NUMBER ===== */
+    // ✅ Generate document number
+    const documentNumber = `FAF-${employeeId}-${Date.now()}`;
 
-    body.documentNumber = `FNF-${employeeId}-${Date.now()}`;
+    // ✅ Create document
+    const letter = await FullAndFinalLetter.create({
+      company: cleanCompany,
+      issuedTo,
+      title,
+      employeeName,
+      employeeEmail,
+      employeeNumber,
+      designation,
+      fnfDate,
+      month,
+      totalSalary,
+      doj,
+      resignationDate,
+      leavingDate,
+      paidDays,
+      finalType,
+      workdays,
+      issuedBy,
+      employeeId,
+      documentNumber,
+    });
 
-    /* ===== CREATE DOCUMENT ===== */
+    // ✅ Populate issuedBy name
+    const populatedLetter = await FullAndFinalLetter.findById(letter._id)
+      .populate("issuedBy", "name");
 
-    const newLetter = await FullAndFinalLetter.create(body);
+    // ✅ Clean response
+    const finalResponse = {
+      ...populatedLetter.toObject(),
+      issuedBy: populatedLetter.issuedBy.name,
+    };
 
     return sendResponse(
       res,
       201,
-      "Full & Final Letter created successfully",
-      newLetter,
+      "Full & Final document created successfully",
+      finalResponse
     );
+
   } catch (error) {
     next(error);
   }
@@ -160,5 +218,6 @@ export const deleteFullAndFinalLetter = async (req, res, next) => {
     return sendResponse(res, 200, "Full & Final Letter deleted successfully");
   } catch (error) {
     next(error);
+    
   }
 };

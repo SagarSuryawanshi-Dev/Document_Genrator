@@ -9,16 +9,26 @@ export const createIncrementLetter = async (req, res, next) => {
   try {
     const body = req.body;
 
+    // ✅ Auth check
+    if (!req.user) {
+      throw new AppError("User not authenticated", 401);
+    }
+
+    const issuedBy = req.user._id;
+
+    // ✅ Body check
     if (!body || Object.keys(body).length === 0) {
       throw new AppError("Request body is missing", 400);
     }
 
+    // ✅ Destructure
     const {
       company,
       issuedTo,
       title,
       employeeName,
-      email,
+      employeeNumber,
+      employeeEmail, // FIX: use consistent naming
       designation,
       performanceYear,
       newCTC,
@@ -28,62 +38,107 @@ export const createIncrementLetter = async (req, res, next) => {
       issueDate,
     } = body;
 
-    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
+    // ✅ Required fields (clean validation)
+    const requiredFields = [
+      "company",
+      "issuedTo",
+      "title",
+      "employeeName",
+      "employeeNumber",
+      "employeeEmail",
+      "designation",
+      "performanceYear",
+      "newCTC",
+      "effectiveDate",
+      "incrementType",
+      "issueDate",
+    ];
 
-    const employeeId = await getOrCreateEmployeeId(email, company);
-    body.employeeId = employeeId;
+    const missingFields = requiredFields.filter((field) => {
+      const value = body[field];
 
-    /* ===== REQUIRED FIELD VALIDATION ===== */
+      return (
+        value === undefined ||
+        value === null ||
+        (typeof value === "string" && value.trim() === "")
+      );
+    });
 
-    if (
-      !company ||
-      !issuedTo ||
-      !title ||
-      !employeeName ||
-      !designation ||
-      !performanceYear ||
-      !newCTC ||
-      !effectiveDate ||
-      !incrementType ||
-      !issueDate
-    ) {
-      throw new AppError("Please fill all required fields", 400);
+    if (missingFields.length > 0) {
+      throw new AppError(
+        `Missing required fields: ${missingFields.join(", ")}`,
+        400
+      );
     }
 
-    /* ===== DUPLICATE CHECK ===== */
+    // ✅ Normalize company
+    const cleanCompany = company.trim();
 
+    // ✅ Generate employeeId
+    const employeeId = await getOrCreateEmployeeId(
+      employeeEmail,
+      cleanCompany
+    );
+
+    // ✅ Duplicate check
     const existing = await IncrementLetter.findOne({
-      company,
-      employeeId,
+      employeeEmail,
+      company: cleanCompany,
       effectiveDate,
     });
 
     if (existing) {
       throw new AppError(
         "Increment already issued for this employee on this date",
-        409,
+        409
       );
     }
 
-    /* ===== GENERATE DOCUMENT NUMBER ===== */
+    // ✅ Generate document number
+    const documentNumber = `INC-${employeeId}-${Date.now()}`;
 
-    body.documentNumber = `INC-${employeeId}-${Date.now()}`;
+    // ✅ Create document
+    const letter = await IncrementLetter.create({
+      company: cleanCompany,
+      issuedTo,
+      title,
+      employeeName,
+      employeeNumber,
+      employeeEmail,
+      designation,
+      performanceYear,
+      newCTC,
+      incrementPercentage,
+      effectiveDate,
+      incrementType,
+      issueDate,
+      issuedBy,
+      employeeId,
+      documentNumber,
+    });
 
-    /* ===== CREATE DOCUMENT ===== */
+    // ✅ Populate issuedBy name
+    const populatedLetter = await IncrementLetter.findById(letter._id)
+      .populate("issuedBy", "name");
 
-    const letter = await IncrementLetter.create(body);
+    // ✅ Final response
+    const finalResponse = {
+      ...populatedLetter.toObject(),
+      issuedBy: populatedLetter.issuedBy.name,
+    };
 
     return sendResponse(
       res,
       201,
       "Increment Letter created successfully",
-      letter,
+      finalResponse
     );
+
   } catch (error) {
     next(error);
   }
 };
-/* ================= GET ALL ================= */
+/* ================ GET ALL ================ */
 
 export const getAllIncrementLetters = async (req, res, next) => {
   try {

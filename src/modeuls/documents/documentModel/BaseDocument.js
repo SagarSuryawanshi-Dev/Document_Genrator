@@ -62,7 +62,7 @@ const baseDocumentSchema = new mongoose.Schema(
     issuedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      // required: true
+      required: true
     },
     documentNumber: {
       type: String,

@@ -1,4 +1,5 @@
 import express from "express";
+import  {protect}  from "../../../middlewares/auth.middleware.js";
 import {
   createOfferLetter,
   getAllOfferLetters,
@@ -10,7 +11,7 @@ import {
 const offerLetterRoutes = express.Router();
 
 
-offerLetterRoutes.post("/generate", createOfferLetter);
+offerLetterRoutes.post("/generate",protect, createOfferLetter);
 
 
 offerLetterRoutes.get("/all-letters", getAllOfferLetters);

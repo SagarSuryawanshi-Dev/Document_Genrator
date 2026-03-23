@@ -1,4 +1,5 @@
 import express from "express";
+import {protect} from "../../../middlewares/auth.middleware.js"
 import {
   createSalarySlip,
   getAllSalarySlips,
@@ -10,7 +11,7 @@ import {
 const salarySlipRoutes = express.Router();
 
 
-salarySlipRoutes.post("/generate", createSalarySlip);
+salarySlipRoutes.post("/generate",protect, createSalarySlip);
 
 
 salarySlipRoutes.get("/all-letters", getAllSalarySlips);

@@ -1,209 +1,4 @@
-// import CompletionCertificate from "../documentModel/CompletionCertificate.js";
-// import AppError from "../../../utlis/apiError.js";
-// import { getOrCreateEmployeeId } from "../../../utlis/getOrCreateEmployeeId.js";
 
-// export const createCompletionCertificate = async (req, res) => {
-//   try {
-//     const body = req.body;
-
-//     if (!body || Object.keys(body).length === 0) {
-//       throw new AppError("Request body is Missing", 400);
-//     }
-
-//     const {
-//       company,
-//       issuedTo,
-//       title,
-//       employeeName,
-//       email,
-//       projectName,
-//       startDate,
-//       completionDate,
-//       designation,
-//       department,
-//       roleinProject,
-//       technologies,
-//       achievements,
-//       clientName,
-//       issueDate,
-//     } = body;
-
-//     /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
-//     const employeeId = await getOrCreateEmployeeId(email, company);
-//     body.employeeId = employeeId;
-
-//     /* ===== REQUIRED FIELD CHECK ===== */
-//     if (
-//       !company ||
-//       !issuedTo ||
-//       !title ||
-//       !employeeName ||
-//       !employeeId ||
-//       !projectName ||
-//       !startDate ||
-//       !completionDate ||
-//       !designation ||
-//       !department ||
-//       !roleinProject ||
-//       !issueDate
-//     ) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Please fill all required fields",
-//       });
-//     }
-
-//     /* ===== DUPLICATE CHECK ===== */
-//     const existing = await CompletionCertificate.findOne({
-//       company,
-
-//       employeeId,
-//       projectName,
-//     });
-
-//     if (existing) {
-//       throw new AppError(
-//         "Completion certificate already exists for this employee",
-//         400,
-//       );
-//     }
-
-//     /* ===== GENERATE DOCUMENT NUMBER ===== */
-//     body.documentNumber = `COM-${employeeId}-${Date.now()}`;
-
-//     const certificate = await CompletionCertificate.create(body);
-
-//     res.status(201).json({
-//       success: true,
-//       message: "Completion Certificate created successfully",
-//       data: certificate,
-//     });
-//   } catch (error) {
-//     console.error("CREATE ERROR:", error);
-
-//     if (error.code === 11000) {
-//       throw new AppError(
-//         "Completion certificate already exists for this employee",
-//         400,
-//       );
-//     }
-
-//     throw new AppError(error.message, 400);
-//   }
-// };
-
-// export const getAllCompletionCertificates = async (req, res) => {
-//   try {
-//     const certificates = await CompletionCertificate.find()
-//       .populate("employee")
-//       .sort({ createdAt: -1 });
-
-//     res.status(200).json({
-//       success: true,
-//       count: certificates.length,
-//       data: certificates,
-//     });
-//   } catch (error) {
-//     console.error("GET ALL ERROR:", error);
-
-//     res.status(500).json({
-//       success: false,
-//       message: "Server Error",
-//     });
-//   }
-// };
-
-// export const getCompletionCertificateById = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     const certificate =
-//       await CompletionCertificate.findById(id).populate("employee");
-
-//     if (!certificate) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Completion Certificate not found",
-//       });
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       data: certificate,
-//     });
-//   } catch (error) {
-//     console.error("GET BY ID ERROR:", error);
-
-//     res.status(500).json({
-//       success: false,
-//       message: "Server Error",
-//     });
-//   }
-// };
-
-// export const updateCompletionCertificate = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     const updatedCertificate = await CompletionCertificate.findByIdAndUpdate(
-//       id,
-//       req.body,
-//       {
-//         new: true,
-//         runValidators: true,
-//       },
-//     );
-
-//     if (!updatedCertificate) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Completion Certificate not found",
-//       });
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Completion Certificate updated successfully",
-//       data: updatedCertificate,
-//     });
-//   } catch (error) {
-//     console.error("UPDATE ERROR:", error);
-
-//     res.status(500).json({
-//       success: false,
-//       message: "Server Error",
-//       error: error.message,
-//     });
-//   }
-// };
-
-// export const deleteCompletionCertificate = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     const deletedCertificate =
-//       await CompletionCertificate.findByIdAndDelete(id);
-
-//     if (!deletedCertificate) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Completion Certificate not found",
-//       });
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Completion Certificate deleted successfully",
-//     });
-//   } catch (error) {
-//     console.error("DELETE ERROR:", error);
-
-//     res.status(500).json({
-//       success: false,
-//       message: "Server Error",
-//     });
-//   }
-// };
 
 import CompletionCertificate from "../documentModel/CompletionCertificate.js";
 import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
@@ -216,17 +11,26 @@ export const createCompletionCertificate = async (req, res, next) => {
   try {
     const body = req.body;
 
-    /* 1️⃣ Check body */
+    // ✅ Auth check
+    if (!req.user) {
+      throw new AppError("User not authenticated", 401);
+    }
+
+    const issuedBy = req.user._id;
+
+    // ✅ Body check
     if (!body || Object.keys(body).length === 0) {
       throw new AppError("Request body is missing", 400);
     }
 
+    // ✅ Destructure
     const {
       company,
       issuedTo,
       title,
       employeeName,
-      email,
+      employeeEmail,
+      employeeNumber,
       projectName,
       startDate,
       completionDate,
@@ -239,55 +43,109 @@ export const createCompletionCertificate = async (req, res, next) => {
       issueDate,
     } = body;
 
-    /* ===== GENERATE EMPLOYEE ID ===== */
-    const employeeId = await getOrCreateEmployeeId(email, company);
-    body.employeeId = employeeId;
+    // ✅ Required fields
+    const requiredFields = [
+      "company",
+      "issuedTo",
+      "title",
+      "employeeName",
+      "employeeEmail",
+      "employeeNumber",
+      "projectName",
+      "startDate",
+      "completionDate",
+      "designation",
+      "department",
+      "roleinProject",
+      "technologies",
+      "issueDate",
+    ];
 
-    /* ===== REQUIRED FIELD VALIDATION ===== */
+    const missingFields = requiredFields.filter((field) => {
+      const value = body[field];
 
-    if (
-      !company ||
-      !issuedTo ||
-      !title ||
-      !employeeName ||
-      !projectName ||
-      !startDate ||
-      !completionDate ||
-      !designation ||
-      !department ||
-      !roleinProject ||
-      !issueDate
-    ) {
-      throw new AppError("Please fill all required fields", 400);
+      return (
+        value === undefined ||
+        value === null ||
+        (typeof value === "string" && value.trim() === "") ||
+        (Array.isArray(value) && value.length === 0)
+      );
+    });
+
+    if (missingFields.length > 0) {
+      throw new AppError(
+        `Missing required fields: ${missingFields.join(", ")}`,
+        400
+      );
     }
 
-    /* ===== DUPLICATE CHECK ===== */
+    // ✅ Normalize company
+    const cleanCompany = company.trim();
 
+    // ✅ Generate employeeId
+    const employeeId = await getOrCreateEmployeeId(
+      employeeEmail,
+      cleanCompany
+    );
+
+    // ✅ Duplicate check
     const existingCertificate = await CompletionCertificate.findOne({
-      company,
-      employeeId,
+      employeeEmail,
+      company: cleanCompany,
       projectName,
     });
 
     if (existingCertificate) {
       throw new AppError(
         "Completion certificate already exists for this employee",
-        409,
+        409
       );
     }
 
-    /* ===== DOCUMENT NUMBER ===== */
+    // ✅ Generate document number
+    const documentNumber = `COM-${employeeId}-${Date.now()}`;
 
-    body.documentNumber = `COM-${employeeId}-${Date.now()}`;
+    // ✅ Create document
+    const certificate = await CompletionCertificate.create({
+      company: cleanCompany,
+      issuedTo,
+      title,
+      employeeName,
+      employeeEmail,
+      employeeNumber,
+      projectName,
+      startDate,
+      completionDate,
+      designation,
+      department,
+      roleinProject,
+      technologies,
+      achievements,
+      clientName,
+      issueDate,
+      issuedBy,
+      employeeId,
+      documentNumber,
+    });
 
-    const certificate = await CompletionCertificate.create(body);
+    // ✅ Populate issuedBy name
+    const populatedCertificate = await CompletionCertificate.findById(
+      certificate._id
+    ).populate("issuedBy", "name");
+
+    // ✅ Clean response
+    const finalResponse = {
+      ...populatedCertificate.toObject(),
+      issuedBy: populatedCertificate.issuedBy.name,
+    };
 
     return sendResponse(
       res,
       201,
       "Completion Certificate created successfully",
-      certificate,
+      finalResponse
     );
+
   } catch (error) {
     next(error);
   }

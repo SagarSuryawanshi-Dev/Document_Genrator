@@ -1,4 +1,5 @@
 import express from "express";
+import  {protect}  from "../../../middlewares/auth.middleware.js";
 import {
   createInternshipCertificate,
   getAllInternshipCertificates,
@@ -12,7 +13,7 @@ const internshipCertificateRoutes = express.Router();
 
 
 
-internshipCertificateRoutes.post("/generate", createInternshipCertificate);
+internshipCertificateRoutes.post("/generate",protect, createInternshipCertificate);
 
 
 internshipCertificateRoutes.get("/all-letters", getAllInternshipCertificates);

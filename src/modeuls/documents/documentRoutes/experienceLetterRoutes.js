@@ -1,4 +1,5 @@
 import express from "express";
+import  {protect}  from "../../../middlewares/auth.middleware.js";
 
 import {
   createExperienceLetter,
@@ -11,7 +12,7 @@ import {
 const experienceLetterRoutes = express.Router();
 
 
-experienceLetterRoutes.post("/generate", createExperienceLetter);
+experienceLetterRoutes.post("/generate", protect,createExperienceLetter);
 
 
 experienceLetterRoutes.get("/all-letters", getAllExperienceLetters);

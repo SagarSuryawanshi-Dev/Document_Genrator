@@ -1,4 +1,5 @@
 import express from "express";
+import  {protect}  from "../../../middlewares/auth.middleware.js";
 
 import {
   createFullAndFinalLetter,
@@ -11,7 +12,7 @@ import {
 const fullAndFinalRouters = express.Router();
 
 
-fullAndFinalRouters.post("/generate", createFullAndFinalLetter);
+fullAndFinalRouters.post("/generate",protect, createFullAndFinalLetter);
 
 fullAndFinalRouters.get("/all-letters", getAllFullAndFinalLetters);
 

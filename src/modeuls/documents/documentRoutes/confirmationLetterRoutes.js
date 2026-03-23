@@ -1,4 +1,5 @@
 import express from "express";
+import  {protect}  from "../../../middlewares/auth.middleware.js";
 import {
   createConfirmationLetter,
   getAllConfirmationLetters,
@@ -10,7 +11,7 @@ import {
 const confirmationLetterRoutes = express.Router();
 
 /* CREATE */
-confirmationLetterRoutes.post("/generate", createConfirmationLetter);
+confirmationLetterRoutes.post("/generate",protect, createConfirmationLetter);
 
 
 confirmationLetterRoutes.get("/all-letters", getAllConfirmationLetters);
