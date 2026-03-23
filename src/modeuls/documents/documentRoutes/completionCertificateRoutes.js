@@ -1,4 +1,5 @@
 import express from "express";
+import  {protect}  from "../../../middlewares/auth.middleware.js";
 import {
   createCompletionCertificate,
   getAllCompletionCertificates,
@@ -11,7 +12,7 @@ const completionCertificateRoutes = express.Router();
 
 // generate completion certificate
 completionCertificateRoutes.post(
-  "/generate",
+  "/generate",protect,
   createCompletionCertificate
 );
 

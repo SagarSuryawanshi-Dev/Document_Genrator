@@ -1,4 +1,5 @@
 import express from "express";
+import  {protect}  from "../../../middlewares/auth.middleware.js";
 import {
   createIncrementLetter,
   getAllIncrementLetters,
@@ -10,7 +11,7 @@ import {
 const incrementLetterRoutes = express.Router();
 
 
-incrementLetterRoutes.post("/generate", createIncrementLetter);
+incrementLetterRoutes.post("/generate", protect, createIncrementLetter);
 
 
 incrementLetterRoutes.get("/all-letters", getAllIncrementLetters);

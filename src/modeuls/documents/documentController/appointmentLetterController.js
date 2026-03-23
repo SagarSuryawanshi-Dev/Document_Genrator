@@ -9,16 +9,25 @@ export const createAppointmentLetter = async (req, res, next) => {
   try {
     const body = req.body;
 
-    /* 1️⃣ Check request body */
+    // ✅ Auth check
+    if (!req.user) {
+      throw new AppError("User not authenticated", 401);
+    }
+
+    const issuedBy = req.user._id;
+
+    // ✅ Body check
     if (!body || Object.keys(body).length === 0) {
       throw new AppError("Request body is missing", 400);
     }
 
+    // ✅ Destructure
     const {
-      title,
       company,
       issuedTo,
+      title,
       employeeName,
+      employeeNumber,
       employeeEmail,
       address,
       position,
@@ -31,14 +40,14 @@ export const createAppointmentLetter = async (req, res, next) => {
       issueDate,
     } = body;
 
+    // ✅ Required fields
     const requiredFields = [
-      "title",
-      "employeeName",
-      "employeeEmail",
-      "employeeNumber",
       "company",
       "issuedTo",
+      "title",
       "employeeName",
+      "employeeNumber",
+      "employeeEmail",
       "address",
       "position",
       "joiningDate",
@@ -49,9 +58,15 @@ export const createAppointmentLetter = async (req, res, next) => {
       "issueDate",
     ];
 
-    const missingFields = requiredFields.filter(
-      (field) => body[field] === undefined,
-    );
+    const missingFields = requiredFields.filter((field) => {
+      const value = body[field];
+
+      return (
+        value === undefined ||
+        value === null ||
+        (typeof value === "string" && value.trim() === "")
+      );
+    });
 
     if (missingFields.length > 0) {
       throw new AppError(
@@ -60,38 +75,71 @@ export const createAppointmentLetter = async (req, res, next) => {
       );
     }
 
-    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
+    // ✅ Normalize company
+    const cleanCompany = company.trim();
 
-    const employeeId = await getOrCreateEmployeeId(email, company);
-    body.employeeId = employeeId;
+    // ✅ Generate employeeId
+    const employeeId = await getOrCreateEmployeeId(
+      employeeEmail,
+      cleanCompany
+    );
 
-    /* ===== DUPLICATE CHECK ===== */
-
-    const exists = await AppointmentLetter.findOne({
-      company,
-      employeeId,
+    // ✅ Duplicate check
+    const existingLetter = await AppointmentLetter.findOne({
+      employeeEmail,
+      company: cleanCompany,
       joiningDate,
     });
 
-    if (existingEmployee) {
-      employeeId = existingEmployee.employeeId;
-    } else {
-      employeeId = await generateEmployeeId(body.company);
+    if (existingLetter) {
+      throw new AppError(
+        "Appointment letter already exists for this employee",
+        409
+      );
     }
 
-    /* ===== CREATE DOCUMENT ===== */
+    // ✅ Generate document number
+    const documentNumber = `AL-${employeeId}-${Date.now()}`;
 
+    // ✅ Create document
     const letter = await AppointmentLetter.create({
-      ...body,
-      documentNumber: `AL-${employeeId}-${Date.now()}`,
+      company: cleanCompany,
+      issuedTo,
+      title,
+      employeeName,
+      employeeNumber,
+      employeeEmail,
+      address,
+      position,
+      joiningDate,
+      probationPeriod,
+      salary,
+      workLocation,
+      reportingManager,
+      appointmentType,
+      issueDate,
+      issuedBy,
+      employeeId,
+      documentNumber,
     });
+
+    // ✅ Populate issuedBy name
+    const populatedLetter = await AppointmentLetter.findById(letter._id)
+      .populate("issuedBy", "name");
+
+    // ✅ Clean response
+    const finalResponse = {
+      ...populatedLetter.toObject(),
+      issuedBy: populatedLetter.issuedBy.name,
+    };
 
     return sendResponse(
       res,
       201,
-      "Appointment letter created successfully",
-      letter,
+      "Appointment Letter created successfully",
+      finalResponse
     );
+
   } catch (error) {
     next(error);
   }

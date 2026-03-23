@@ -3,24 +3,32 @@ import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmp
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
 
-/* ================= CREATE ================= */
+/* ================ CREATE ================ */
 
 export const createConfirmationLetter = async (req, res, next) => {
- try {
+  try {
     const body = req.body;
 
-    console.log("body:",body)
+    // ✅ Auth check
+    if (!req.user) {
+      throw new AppError("User not authenticated", 401);
+    }
 
+    const issuedBy = req.user._id;
+
+    // ✅ Body check
     if (!body || Object.keys(body).length === 0) {
       throw new AppError("Request body is missing", 400);
     }
 
+    // ✅ Destructure
     const {
       company,
       issuedTo,
       title,
       employeeName,
-      email,
+      employeeEmail,
+      employeeNumber,
       effectiveDate,
       issueDate,
       totalSalary,
@@ -29,55 +37,101 @@ export const createConfirmationLetter = async (req, res, next) => {
       confirmationType,
     } = body;
 
-    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
-    const employeeId = await getOrCreateEmployeeId(email, company);
-    body.employeeId = employeeId;
+    // ✅ Required fields
+    const requiredFields = [
+      "company",
+      "issuedTo",
+      "title",
+      "employeeName",
+      "employeeEmail",
+      "employeeNumber",
+      "effectiveDate",
+      "issueDate",
+      "totalSalary",
+      "position",
+      "department",
+      "confirmationType",
+    ];
 
-    /* ===== REQUIRED FIELD VALIDATION ===== */
+    const missingFields = requiredFields.filter((field) => {
+      const value = body[field];
 
-    if (
-      !company ||
-      !issuedTo ||
-      !title ||
-      !employeeName ||
-      !effectiveDate ||
-      !issueDate ||
-      !totalSalary ||
-      !position ||
-      !confirmationType
-    ) {
-      throw new AppError("Please fill all required fields", 400);
+      return (
+        value === undefined ||
+        value === null ||
+        (typeof value === "string" && value.trim() === "")
+      );
+    });
+
+    if (missingFields.length > 0) {
+      throw new AppError(
+        `Missing required fields: ${missingFields.join(", ")}`,
+        400
+      );
     }
 
-    /* ===== DUPLICATE CHECK ===== */
+    // ✅ Normalize company
+    const cleanCompany = company.trim();
 
+    // ✅ Generate employeeId
+    const employeeId = await getOrCreateEmployeeId(
+      employeeEmail,
+      cleanCompany
+    );
+
+    // ✅ Duplicate check
     const existing = await ConfirmationLetter.findOne({
-      company,
-      employeeId,
+      employeeEmail,
+      company: cleanCompany,
       effectiveDate,
     });
 
     if (existing) {
       throw new AppError(
-        "Confirmation letter already exists for this employee on this effective date",
-        409,
+        "Confirmation letter already exists for this employee",
+        409
       );
     }
 
-    /* ===== GENERATE DOCUMENT NUMBER ===== */
+    // ✅ Generate document number
+    const documentNumber = `CONF-${employeeId}-${Date.now()}`;
 
-    body.documentNumber = `CONF-${employeeId}-${Date.now()}`;
+    // ✅ Create document
+    const letter = await ConfirmationLetter.create({
+      company: cleanCompany,
+      issuedTo,
+      title,
+      employeeName,
+      employeeEmail,
+      employeeNumber,
+      effectiveDate,
+      issueDate,
+      totalSalary,
+      position,
+      department,
+      confirmationType,
+      issuedBy,
+      employeeId,
+      documentNumber,
+    });
 
-    /* ===== CREATE LETTER ===== */
+    // ✅ Populate issuedBy name
+    const populatedLetter = await ConfirmationLetter.findById(letter._id)
+      .populate("issuedBy", "name");
 
-    const newLetter = await ConfirmationLetter.create(body);
+    // ✅ Clean response
+    const finalResponse = {
+      ...populatedLetter.toObject(),
+      issuedBy: populatedLetter.issuedBy.name,
+    };
 
     return sendResponse(
       res,
       201,
       "Confirmation Letter created successfully",
-      newLetter,
+      finalResponse
     );
+
   } catch (error) {
     next(error);
   }

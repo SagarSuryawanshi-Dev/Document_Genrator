@@ -1,4 +1,5 @@
 import express from "express";
+import  {protect}  from "../../../middlewares/auth.middleware.js";
 import {
   createAppointmentLetter,
   getAllAppointmentLetters,
@@ -10,7 +11,7 @@ import {
 const appointmentLetterRoutes = express.Router();
 
 // generate appointment letter
-appointmentLetterRoutes.post("/generate", createAppointmentLetter);
+appointmentLetterRoutes.post("/generate",protect, createAppointmentLetter);
 
 // get all appointment letter
 appointmentLetterRoutes.get("/all-letters", getAllAppointmentLetters);

@@ -1,4 +1,5 @@
 import express from "express";
+import  {protect}  from "../../../middlewares/auth.middleware.js";
 import {
   createRelievingLetter,
   getAllRelievingLetters,
@@ -10,7 +11,7 @@ import {
 const relievingLetterRoutes = express.Router();
 
 
-relievingLetterRoutes.post("/generate", createRelievingLetter);
+relievingLetterRoutes.post("/generate",protect ,createRelievingLetter);
 
 
 relievingLetterRoutes.get("/all-letters", getAllRelievingLetters);

@@ -3,22 +3,32 @@ import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmp
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
 
-/* ================= CREATE ================= */
+/* ================ CREATE ================ */
 
 export const createSalarySlip = async (req, res, next) => {
   try {
     const body = req.body;
 
+    // ✅ Auth check
+    if (!req.user) {
+      throw new AppError("User not authenticated", 401);
+    }
+
+    const issuedBy = req.user._id;
+
+    // ✅ Body check
     if (!body || Object.keys(body).length === 0) {
       throw new AppError("Request body is missing", 400);
     }
 
+    // ✅ Destructure (consistent naming)
     const {
       company,
       issuedTo,
       title,
       employeeName,
-      email,
+      employeeNumber,
+      employeeEmail, // FIX
       designation,
       department,
       month,
@@ -33,57 +43,113 @@ export const createSalarySlip = async (req, res, next) => {
       accountNo,
     } = body;
 
-    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
-    const employeeId = await getOrCreateEmployeeId(email, company);
-    body.employeeId = employeeId;
+    // ✅ Required fields
+    const requiredFields = [
+      "company",
+      "issuedTo",
+      "title",
+      "employeeName",
+      "employeeNumber",
+      "employeeEmail",
+      "designation",
+      "department",
+      "month",
+      "totalSalary",
+      "doj",
+      "pan",
+      "gender",
+      "mode",
+      "workdays",
+      "dob",
+      "salaryType",
+      "accountNo",
+    ];
 
-    /* ===== REQUIRED FIELD VALIDATION ===== */
+    const missingFields = requiredFields.filter((field) => {
+      const value = body[field];
 
-    if (
-      !company ||
-      !issuedTo ||
-      !title ||
-      !employeeName ||
-      !designation ||
-      !department ||
-      !month ||
-      !totalSalary ||
-      !doj ||
-      !pan ||
-      !gender ||
-      !mode ||
-      !workdays ||
-      !dob ||
-      !salaryType ||
-      !accountNo
-    ) {
-      throw new AppError("Please fill all required fields", 400);
+      return (
+        value === undefined ||
+        value === null ||
+        (typeof value === "string" && value.trim() === "")
+      );
+    });
+
+    if (missingFields.length > 0) {
+      throw new AppError(
+        `Missing required fields: ${missingFields.join(", ")}`,
+        400
+      );
     }
 
-    /* ===== DUPLICATE CHECK ===== */
+    // ✅ Normalize company
+    const cleanCompany = company.trim();
 
+    // ✅ Generate employeeId
+    const employeeId = await getOrCreateEmployeeId(
+      employeeEmail,
+      cleanCompany
+    );
+
+    // ✅ Duplicate check
     const existing = await SalarySlip.findOne({
-      company,
-      employeeId,
+      employeeEmail,
+      company: cleanCompany,
       month,
     });
 
     if (existing) {
       throw new AppError(
         "Salary slip already exists for this employee in this month",
-        409,
+        409
       );
     }
 
-    /* ===== DOCUMENT NUMBER ===== */
+    // ✅ Generate document number
+    const documentNumber = `SAL-${employeeId}-${Date.now()}`;
 
-    body.documentNumber = `SAL-${employeeId}-${Date.now()}`;
+    // ✅ Create document
+    const slip = await SalarySlip.create({
+      company: cleanCompany,
+      issuedTo,
+      title,
+      employeeName,
+      employeeNumber,
+      employeeEmail,
+      designation,
+      department,
+      month,
+      totalSalary,
+      doj,
+      pan,
+      gender,
+      mode,
+      workdays,
+      dob,
+      salaryType,
+      accountNo,
+      issuedBy,
+      employeeId,
+      documentNumber,
+    });
 
-    /* ===== CREATE ===== */
+    // ✅ Populate issuedBy name
+    const populatedSlip = await SalarySlip.findById(slip._id)
+      .populate("issuedBy", "name");
 
-    const slip = await SalarySlip.create(body);
+    // ✅ Clean response
+    const finalResponse = {
+      ...populatedSlip.toObject(),
+      issuedBy: populatedSlip.issuedBy.name,
+    };
 
-    return sendResponse(res, 201, "Salary Slip created successfully", slip);
+    return sendResponse(
+      res,
+      201,
+      "Salary Slip created successfully",
+      finalResponse
+    );
+
   } catch (error) {
     next(error);
   }

@@ -1,88 +1,47 @@
-
 import AppError from "../utlis/apiError.js";
 import sendResponse from "../utlis/apiResponse.js";
 import User from "./user.Schema.js";
 import bcrypt from "bcrypt";
-
-// V1 - Simple Authentication (No JWT)
-// Session will be stored in memory or using express-session
-
-export const Register = async (req, res, next) => {
-  try {
-    const { name, email, password } = req.body;
-
-    // Validation
-    if (!name || !email || !password) {
-      throw new AppError("Name, email and password are required", 400);
-    }
-
-    if (password.length < 6) {
-      throw new AppError("Password must be at least 6 characters", 400);
-    }
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
-    if (existingUser) {
-      throw new AppError("Email already registered", 409);
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    const user = await User.create({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      password: hashedPassword,
-      role: "user"
-    });
-
-    // Return user without password
-    const safeUser = await User.findById(user._id).select("-password");
-
-    return res.status(201).json({
-      success: true,
-      message: "Registration successful",
-      data: safeUser
-    });
-
-  } catch (error) {
-    next(error);
-  }
-};
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utlis/tokenGenerator.js"; 
 
 export const Login = async (req, res, next) => {
   try {
     let { email, password } = req.body;
 
     if (!email || !password) {
-      throw new AppError("Email and password are required", 400);
+      return next(new AppError("Email and password are required", 400));
     }
 
     email = email.toLowerCase().trim();
 
-    // Find user with password
     const user = await User.findOne({ email }).select("+password");
+
     if (!user) {
-      throw new AppError("Invalid email or password", 401);
+      return next(new AppError("Invalid email or password", 401));
     }
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
-      throw new AppError("Invalid email or password", 401);
+      return next(new AppError("Invalid email or password", 401));
     }
 
-    // V1: Store user session (simple approach)
-    // In V1, we'll just send user data back and let frontend handle it
-    // V2 will use JWT tokens
+    //  FIXED
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
 
-    const safeUser = await User.findById(user._id).select("-password");
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
 
-    return res.status(200).json({
+    res.status(200).json({
+
       success: true,
       message: "Login successful",
-      data: safeUser
+      accessToken,
+      user
     });
 
   } catch (error) {
@@ -92,11 +51,10 @@ export const Login = async (req, res, next) => {
 
 export const Logout = async (req, res, next) => {
   try {
-    // V1: Simple logout (frontend will clear user data)
-    // V2 will clear JWT tokens from cookies
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
 
-    return sendResponse(res, 200, true, "Logout successful");
-
+    return sendResponse(res, 200, true, "Logout Successful");
   } catch (error) {
     next(new AppError(error.message, 500));
   }

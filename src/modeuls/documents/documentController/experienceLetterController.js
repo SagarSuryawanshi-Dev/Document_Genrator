@@ -3,65 +3,132 @@ import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmp
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
 
+
 export const createExperienceLetter = async (req, res, next) => {
   try {
     const body = req.body;
 
+    // ✅ Auth check
+    if (!req.user) {
+      throw new AppError("User not authenticated", 401);
+    }
+
+    const issuedBy = req.user._id;
+
+    // ✅ Body check
     if (!body || Object.keys(body).length === 0) {
       throw new AppError("Request body is missing", 400);
     }
 
+    // ✅ Destructure
     const {
       company,
       issuedTo,
       title,
       employeeName,
-      email,
+      employeeNumber,
+      employeeEmail,
       designation,
+      department, // optional
       joiningDate,
       relievingDate,
       issueDate,
     } = body;
 
-    const employeeId = await getOrCreateEmployeeId(email, company);
-    body.employeeId = employeeId;
+    // ✅ Required fields (department removed — optional)
+    const requiredFields = [
+      "company",
+      "issuedTo",
+      "title",
+      "employeeName",
+      "employeeNumber",
+      "employeeEmail",
+      "employeeNumber",
+      "designation",
+      "joiningDate",
+      "relievingDate",
+      "issueDate",
+    ];
 
-    if (
-      !company ||
-      !issuedTo ||
-      !title ||
-      !employeeName ||
-      !designation ||
-      !joiningDate ||
-      !relievingDate ||
-      !issueDate
-    ) {
-      throw new AppError("Please fill all required fields", 400);
+    const missingFields = requiredFields.filter((field) => {
+      const value = body[field];
+
+      return (
+        value === undefined ||
+        value === null ||
+        (typeof value === "string" && value.trim() === "")
+      );
+    });
+
+    if (missingFields.length > 0) {
+      throw new AppError(
+        `Missing required fields: ${missingFields.join(", ")}`,
+        400
+      );
     }
 
+    // ✅ Normalize company
+    const cleanCompany = company.trim();
+
+    // ✅ Generate employeeId
+    const employeeId = await getOrCreateEmployeeId(
+      employeeEmail,
+      cleanCompany
+    );
+
+    // ✅ Duplicate check (single clean check)
     const existingLetter = await ExperienceLetter.findOne({
-      company,
-      employeeId,
+      employeeEmail,
+      company: cleanCompany,
       relievingDate,
     });
 
     if (existingLetter) {
       throw new AppError(
-        "Experience letter already exists for this employee with this relieving date",
-        409,
+        "Experience Letter already exists for this employee",
+        409
       );
     }
 
-    body.documentNumber = `EXP-${employeeId}-${Date.now()}`;
+    // ✅ Generate document number
+    const documentNumber = `EXP-${employeeId}-${Date.now()}`;
 
-    const newLetter = await ExperienceLetter.create(body);
+    // ✅ Create document
+    const letter = await ExperienceLetter.create({
+      company: cleanCompany,
+      issuedTo,
+      title,
+      employeeName,
+      employeeNumber,
+      employeeEmail,
+      employeeNumber,
+      designation,
+      department, // optional
+      joiningDate,
+      relievingDate,
+      issueDate,
+      issuedBy,
+      employeeId,
+      documentNumber,
+    });
+
+    // ✅ Populate issuedBy name
+    const populatedLetter = await ExperienceLetter.findById(letter._id)
+      .populate("issuedBy", "name");
+
+    // ✅ Clean response
+    const finalResponse = {
+      ...populatedLetter.toObject(),
+      issuedBy: populatedLetter.issuedBy.name,
+    };
 
     return sendResponse(
       res,
       201,
       "Experience Letter created successfully",
-      newLetter,
+      finalResponse
     );
+
   } catch (error) {
     next(error);
   }

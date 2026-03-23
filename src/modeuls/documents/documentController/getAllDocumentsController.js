@@ -29,4 +29,5 @@ import  Document  from "../documentModel/BaseDocument.js";
 };
 
 
+
 export default getAllDocuments;

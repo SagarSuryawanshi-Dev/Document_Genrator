@@ -1,6 +1,5 @@
 import express from "express";
 import { 
-  Register,
   Login, 
   Logout,
   GetProfile,
@@ -10,7 +9,7 @@ import {
 const router = express.Router();
 
 // PUBLIC ROUTES
-router.post("/register", Register);
+
 router.post("/login", Login);
 router.post("/logout", Logout);
 
