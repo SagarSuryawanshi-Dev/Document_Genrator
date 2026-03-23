@@ -1,17 +1,15 @@
 import OfferLetter from "../documentModel/OfferLetter.js";
 import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
+import { getOrCreateEmployeeNumber } from "../../../serviceController/getOrCreateEmployeeNumber.js";
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
 
 /* ================= CREATE ================= */
-
 export const createOfferLetter = async (req, res, next) => {
   try {
     const body = req.body;
-
-    if (!body || Object.keys(body).length === 0) {
+    if (!body || Object.keys(body).length === 0)
       throw new AppError("Request body is missing", 400);
-    }
 
     const {
       company,
@@ -23,64 +21,78 @@ export const createOfferLetter = async (req, res, next) => {
       department,
       employmentType,
       joiningDate,
-      probationPeriod,
       salary,
       location,
-      workHours,
-      reportingManager,
       offerValidTill,
       offerType,
       issueDate,
     } = body;
 
-    /* ===== GENERATE OR FETCH EMPLOYEE ID ===== */
-    const employeeId = await getOrCreateEmployeeId(email, company);
-    body.employeeId = employeeId;
-
-    /* ===== REQUIRED FIELD VALIDATION ===== */
     if (
-      !company ||
-      !issuedTo ||
-      !title ||
-      !employeeName ||
-      !position ||
-      !department ||
-      !employmentType ||
-      !joiningDate ||
-      !salary ||
-      !location ||
-      !offerValidTill ||
-      !offerType ||
-      !issueDate
+      [
+        company,
+        issuedTo,
+        title,
+        employeeName,
+        email,
+        position,
+        department,
+        employmentType,
+        joiningDate,
+        salary,
+        location,
+        offerValidTill,
+        offerType,
+        issueDate,
+      ].some((f) => !f)
     ) {
       throw new AppError("Please fill all required fields", 400);
     }
 
-    /* ===== DUPLICATE CHECK ===== */
-    const exists = await OfferLetter.findOne({
-      company,
-      employeeId,
-      joiningDate,
-    });
+    body.employeeId = await getOrCreateEmployeeId(email, company);
+    body.employeeEmail = email;
+    body.employeeNumber = await getOrCreateEmployeeNumber(body.employeeId);
+    body.documentNumber = `OL-${body.employeeId}-${Date.now()}`;
 
-    if (exists) {
-      throw new AppError(
-        "Offer letter already exists for this candidate and joining date",
-        409,
-      );
-    }
-
-    /* ===== DOCUMENT NUMBER ===== */
-    body.documentNumber = `OL-${employeeId}-${Date.now()}`;
-
-    /* ===== CREATE ===== */
     const letter = await OfferLetter.create(body);
+
+    console.log("EMAIL:", email);
+    console.log("EMPLOYEE ID GENERATED:", body.employeeId); 
+    console.log("Fields received:", {
+      company,
+      issuedTo,
+      title,
+      employeeName,
+      email,
+      position,
+      department,
+      employmentType,
+      joiningDate,
+      salary,
+      location,
+      offerValidTill,
+      offerType,
+      issueDate,
+    });
 
     return sendResponse(res, 201, "Offer letter created successfully", letter);
   } catch (error) {
-    next(error);
+    // Explicitly handle MongoDB duplicate key error
+    if (error.code === 11000) {
+      return sendResponse(
+        res,
+        409,
+        `Offer letter already exists for this combination: ${JSON.stringify(
+          error.keyValue
+        )}`
+      );
+    }
+
+    console.error("❌ BACKEND ERROR:", error);
+    next(error); // Other errors
   }
 };
+
 /* ================= READ ALL ================= */
 export const getAllOfferLetters = async (req, res, next) => {
   try {

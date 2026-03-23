@@ -1,5 +1,3 @@
-
-
 import mongoose from "mongoose";
 
 const options = {
@@ -9,33 +7,11 @@ const options = {
 
 const baseDocumentSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      enum: ["Mr.", "Mrs.", "Miss.", "Mx."],
-      required: true,
-    },
-
-    employeeName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    employeeId: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    employeeEmail: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    employeeNumber: {
-      type: Number,
-      required: true,
-      trim:true
-    },
+    title: { type: String, enum: ["Mr.", "Mrs.", "Miss.", "Mx."], required: true },
+    employeeName: { type: String, required: true, trim: true },
+    employeeId: { type: String, required: true, trim: true },
+    employeeEmail: { type: String, required: true, trim: true },
+    employeeNumber: { type: Number, required: true },
     company: {
       type: String,
       required: true,
@@ -53,46 +29,17 @@ const baseDocumentSchema = new mongoose.Schema(
         "JDIT Software Solutions Pvt. Ltd.",
       ],
     },
-
-    issuedTo: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    issuedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      // required: true
-    },
-    documentNumber: {
-      type: String,
-      trim: true,
-    },
-    paymentStatus: {
-      type: String,
-      enum: ["Paid", "Pending"],
-      default: "Pending",
-      required:true
-    }
-
+    issuedTo: { type: String, required: true, trim: true },
+    issuedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    documentNumber: { type: String, trim: true },
+    paymentStatus: { type: String, enum: ["Paid", "Pending"], default: "Pending" },
   },
-  options,
+  options
 );
 
-// 🔐 UNIQUE documentNumber ONLY when exists
-baseDocumentSchema.index(
-  { documentNumber: 1 },
-  {
-    unique: true,
-    partialFilterExpression: {
-      documentNumber: { $exists: true, $ne: null },
-    },
-  },
-);
-baseDocumentSchema.index({
-  employeeEmail: 1,
-  company: 1,
-});
+// Unique indexes
+baseDocumentSchema.index({ documentNumber: 1 }, { unique: true, partialFilterExpression: { documentNumber: { $exists: true, $ne: null } } });
+baseDocumentSchema.index({ employeeEmail: 1, company: 1 });
 
 const Document = mongoose.model("Document", baseDocumentSchema);
 
