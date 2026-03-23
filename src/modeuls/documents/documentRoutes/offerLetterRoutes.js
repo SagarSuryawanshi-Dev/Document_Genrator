@@ -7,12 +7,21 @@ import {
   deleteOfferLetter,
 } from "../documentController/offerLetterController.js";
 
-const router = express.Router();
+const offerLetterRoutes = express.Router();
 
-router.post("/", createOfferLetter);
-router.get("/", getAllOfferLetters);
-router.get("/:id", getOfferLetterById);
-router.put("/:id", updateOfferLetter);
-router.delete("/:id", deleteOfferLetter);
 
-export default router;
+offerLetterRoutes.post("/generate", createOfferLetter);
+
+
+offerLetterRoutes.get("/all-letters", getAllOfferLetters);
+
+
+offerLetterRoutes.get("/user/:id", getOfferLetterById);
+
+
+offerLetterRoutes.put("/update/:id", updateOfferLetter);
+
+
+offerLetterRoutes.delete("/delete/:id", deleteOfferLetter);
+
+export default offerLetterRoutes;

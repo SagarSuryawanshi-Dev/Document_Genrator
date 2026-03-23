@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
+import  Document  from "./BaseDocument.js";
 
 const CompletionCertificateSchema = new mongoose.Schema(
   {
+
     title: {
       type: String,
       required: true,
@@ -17,6 +19,7 @@ const CompletionCertificateSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
     projectName: {
       type: String,
       required: true,
@@ -64,11 +67,15 @@ const CompletionCertificateSchema = new mongoose.Schema(
 );
 
 CompletionCertificateSchema.index(
-  { employeeId: 1, projectName: 1 },
+  { employeeId: 1,projectName: 1},
   { unique: true },
+  
+  { employeeId: 1, projectName: 1 },
+  { unique: true }
+
 );
 
-export default mongoose.model(
+export default Document.discriminator(
   "CompletionCertificate",
   CompletionCertificateSchema,
 );

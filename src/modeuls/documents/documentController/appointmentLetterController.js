@@ -9,8 +9,9 @@ export const createAppointmentLetter = async (req, res, next) => {
   try {
     const body = req.body;
 
+    /* 1️⃣ Check request body */
     if (!body || Object.keys(body).length === 0) {
-      throw new AppError("Request body is Missing", 400);
+      throw new AppError("Request body is missing", 400);
     }
 
     const {
@@ -18,7 +19,7 @@ export const createAppointmentLetter = async (req, res, next) => {
       company,
       issuedTo,
       employeeName,
-      email,
+      employeeEmail,
       address,
       position,
       joiningDate,
@@ -32,10 +33,12 @@ export const createAppointmentLetter = async (req, res, next) => {
 
     const requiredFields = [
       "title",
+      "employeeName",
+      "employeeEmail",
+      "employeeNumber",
       "company",
       "issuedTo",
       "employeeName",
-      "email",
       "address",
       "position",
       "joiningDate",
@@ -53,7 +56,7 @@ export const createAppointmentLetter = async (req, res, next) => {
     if (missingFields.length > 0) {
       throw new AppError(
         `Missing required fields: ${missingFields.join(", ")}`,
-        400,
+        400
       );
     }
 
@@ -70,11 +73,10 @@ export const createAppointmentLetter = async (req, res, next) => {
       joiningDate,
     });
 
-    if (exists) {
-      throw new AppError(
-        "Appointment letter already exists for this employee",
-        409,
-      );
+    if (existingEmployee) {
+      employeeId = existingEmployee.employeeId;
+    } else {
+      employeeId = await generateEmployeeId(body.company);
     }
 
     /* ===== CREATE DOCUMENT ===== */
@@ -114,7 +116,6 @@ export const getAllAppointmentLetters = async (req, res) => {
   }
 };
 
-/* ================= READ ONE ================= */
 export const getAppointmentLetterById = async (req, res) => {
   try {
     const letter = await AppointmentLetter.findById(req.params.id).populate(
@@ -140,7 +141,6 @@ export const getAppointmentLetterById = async (req, res) => {
   }
 };
 
-/* ================= UPDATE ================= */
 export const updateAppointmentLetter = async (req, res) => {
   try {
     const updated = await AppointmentLetter.findByIdAndUpdate(
@@ -169,7 +169,6 @@ export const updateAppointmentLetter = async (req, res) => {
   }
 };
 
-/* ================= DELETE ================= */
 export const deleteAppointmentLetter = async (req, res) => {
   try {
     const deleted = await AppointmentLetter.findByIdAndDelete(req.params.id);

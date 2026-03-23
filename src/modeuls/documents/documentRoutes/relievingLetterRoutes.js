@@ -7,12 +7,21 @@ import {
   deleteRelievingLetter,
 } from "../documentController/relievingLetterController.js";
 
-const router = express.Router();
+const relievingLetterRoutes = express.Router();
 
-router.post("/", createRelievingLetter);
-router.get("/", getAllRelievingLetters);
-router.get("/:id", getRelievingLetterById);
-router.put("/:id", updateRelievingLetter);
-router.delete("/:id", deleteRelievingLetter);
 
-export default router;
+relievingLetterRoutes.post("/generate", createRelievingLetter);
+
+
+relievingLetterRoutes.get("/all-letters", getAllRelievingLetters);
+
+
+relievingLetterRoutes.get("/user/:id", getRelievingLetterById);
+
+
+relievingLetterRoutes.put("/update/:id", updateRelievingLetter);
+
+
+relievingLetterRoutes.delete("/delete/:id", deleteRelievingLetter);
+
+export default relievingLetterRoutes;

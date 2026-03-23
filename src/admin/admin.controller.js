@@ -43,3 +43,4 @@ export const getAllUsers = async (req,res,next) => {
     return next(new AppError(error.message, 500));
   }
 }
+

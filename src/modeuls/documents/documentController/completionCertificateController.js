@@ -216,6 +216,7 @@ export const createCompletionCertificate = async (req, res, next) => {
   try {
     const body = req.body;
 
+    /* 1️⃣ Check body */
     if (!body || Object.keys(body).length === 0) {
       throw new AppError("Request body is missing", 400);
     }

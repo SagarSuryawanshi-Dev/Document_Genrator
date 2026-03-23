@@ -6,8 +6,10 @@ import sendResponse from "../../../utlis/apiResponse.js";
 /* ================= CREATE ================= */
 
 export const createConfirmationLetter = async (req, res, next) => {
-  try {
+ try {
     const body = req.body;
+
+    console.log("body:",body)
 
     if (!body || Object.keys(body).length === 0) {
       throw new AppError("Request body is missing", 400);

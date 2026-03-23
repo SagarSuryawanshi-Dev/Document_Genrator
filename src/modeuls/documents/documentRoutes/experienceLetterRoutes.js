@@ -8,16 +8,21 @@ import {
   deleteExperienceLetter,
 } from "../documentController/experienceLetterController.js";
 
-const router = express.Router();
+const experienceLetterRoutes = express.Router();
 
-router.post("/", createExperienceLetter);
 
-router.get("/", getAllExperienceLetters);
+experienceLetterRoutes.post("/generate", createExperienceLetter);
 
-router.get("/:id", getExperienceLetterById);
 
-router.put("/:id", updateExperienceLetter);
+experienceLetterRoutes.get("/all-letters", getAllExperienceLetters);
 
-router.delete("/:id", deleteExperienceLetter);
 
-export default router;
+experienceLetterRoutes.get("/user/:id", getExperienceLetterById);
+
+
+experienceLetterRoutes.put("/update/:id", updateExperienceLetter);
+
+
+experienceLetterRoutes.delete("/delete/:id", deleteExperienceLetter);
+
+export default experienceLetterRoutes;
