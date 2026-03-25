@@ -45,7 +45,7 @@ const baseDocumentSchema = new mongoose.Schema(
         "Smart Software Services Pvt. Ltd.",
         "SmartMatrix Digital Services Pvt. Ltd.",
         "Devcons Software Solutions Pvt. Ltd.",
-        "Penta Software Consultancy Services Pvt. Ltd.",
+        "Penta Software Consultancy Services (I) Pvt Ltd",
         "Cubeage Technologies Services Pvt. Ltd.",
         "Quick Management Service Pvt. Ltd.",
         "Neweage Cloud Solution Pvt. Ltd.",
