@@ -40,5 +40,8 @@ export const generateEmployeeId = async (company) => {
 
   const nextNumber = 101 + count;
 
+  console.log("📦 Company received:", company);
+  console.log("📚 Available prefixes:", Object.keys(companyPrefix));
+
   return `${prefix}${nextNumber}`;
 };

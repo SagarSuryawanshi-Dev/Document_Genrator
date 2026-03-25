@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from "../utlis/tokenGenerator.js"; 
+} from "../utlis/tokenGenerator.js";
 
 export const Login = async (req, res, next) => {
   try {
@@ -37,10 +37,10 @@ export const Login = async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     res.cookie("accessToken", accessToken, {
-      httpOnly: true,                       
-      secure: process.env.NODE_ENV === "production", 
-      sameSite: "Strict",                      
-      maxAge: 24 * 60 * 60 * 1000,             
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({
@@ -58,8 +58,14 @@ export const Login = async (req, res, next) => {
 
 export const Logout = async (req, res, next) => {
   try {
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax", // 🔥 IMPORTANT (not Strict for dev)
+    };
+
+    res.clearCookie("accessToken", cookieOptions);
+    res.clearCookie("refreshToken", cookieOptions);
 
     return sendResponse(res, 200, true, "Logout Successful");
   } catch (error) {

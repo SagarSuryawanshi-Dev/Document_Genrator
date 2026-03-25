@@ -32,7 +32,7 @@ const baseDocumentSchema = new mongoose.Schema(
       trim: true
     },
     employeeNumber: {
-      type: Number,
+      type: String,
       required: true,
       trim:true
     },
@@ -41,7 +41,7 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
       enum: [
-        "Nimbja Security Solutions Pvt. Ltd.",
+        "NIMBJA SECURITY SOLUTIONS Pvt. Ltd.",
         "Smart Software Services Pvt. Ltd.",
         "SmartMatrix Digital Services Pvt. Ltd.",
         "Devcons Software Solutions Pvt. Ltd.",

@@ -107,7 +107,7 @@ export const createAppointmentLetter = async (req, res, next) => {
       issuedTo,
       title,
       employeeName,
-      employeeNumber,
+      employeeNumber: Number(employeeNumber) || Date.now(),
       employeeEmail,
       address,
       position,
@@ -141,9 +141,11 @@ export const createAppointmentLetter = async (req, res, next) => {
     );
 
   } catch (error) {
+    console.error("🔥 APPOINTMENT ERROR:", error);
     next(error);
   }
 };
+
 /* ================= READ ALL ================= */
 export const getAllAppointmentLetters = async (req, res) => {
   try {

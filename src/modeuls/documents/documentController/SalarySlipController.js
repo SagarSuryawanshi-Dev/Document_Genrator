@@ -52,27 +52,21 @@ export const createSalarySlip = async (req, res, next) => {
       "employeeNumber",
       "employeeEmail",
       "designation",
-      "department",
       "month",
       "totalSalary",
       "doj",
       "pan",
       "gender",
-      "mode",
       "workdays",
       "dob",
       "salaryType",
-      "accountNo",
     ];
+
+    // Optional fields handled gracefully
 
     const missingFields = requiredFields.filter((field) => {
       const value = body[field];
-
-      return (
-        value === undefined ||
-        value === null ||
-        (typeof value === "string" && value.trim() === "")
-      );
+      return value === undefined || value === null || (typeof value === "string" && value.trim() === "");
     });
 
     if (missingFields.length > 0) {
@@ -151,6 +145,7 @@ export const createSalarySlip = async (req, res, next) => {
     );
 
   } catch (error) {
+    console.error("🔥 SALARY ERROR:", error);
     next(error);
   }
 };

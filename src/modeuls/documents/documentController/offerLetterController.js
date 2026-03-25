@@ -2,33 +2,36 @@ import OfferLetter from "../documentModel/OfferLetter.js";
 import { getOrCreateEmployeeId } from "../../../serviceController/getOrCreateEmployeeId.js";
 import AppError from "../../../utlis/apiError.js";
 import sendResponse from "../../../utlis/apiResponse.js";
+import mongoose from "mongoose";
 
 /* ================= CREATE ================= */
-
 export const createOfferLetter = async (req, res, next) => {
   try {
     const body = req.body;
 
-    // ✅ Auth check
+    // ================= AUTH CHECK =================
     if (!req.user) {
       throw new AppError("User not authenticated", 401);
     }
 
     const issuedBy = req.user._id;
 
-    // ✅ Body check
+    if (!mongoose.Types.ObjectId.isValid(issuedBy)) {
+      throw new AppError("Invalid issuedBy ID", 400);
+    }
+
+    // ================= BODY CHECK =================
     if (!body || Object.keys(body).length === 0) {
       throw new AppError("Request body is missing", 400);
     }
 
-    // ✅ Destructure (consistent naming)
     const {
       company,
       issuedTo,
       title,
       employeeName,
       employeeNumber,
-      employeeEmail, // FIX: use consistent field
+      employeeEmail,
       position,
       department,
       employmentType,
@@ -43,7 +46,9 @@ export const createOfferLetter = async (req, res, next) => {
       issueDate,
     } = body;
 
-    // ✅ Required fields
+    console.log("📥 BODY RECEIVED:", body);
+
+    // ================= REQUIRED FIELDS =================
     const requiredFields = [
       "company",
       "issuedTo",
@@ -64,7 +69,6 @@ export const createOfferLetter = async (req, res, next) => {
 
     const missingFields = requiredFields.filter((field) => {
       const value = body[field];
-
       return (
         value === undefined ||
         value === null ||
@@ -79,20 +83,66 @@ export const createOfferLetter = async (req, res, next) => {
       );
     }
 
-    // ✅ Normalize company
+    // ================= ENUM VALIDATION =================
+    const validEmploymentTypes = [
+      "Full-time",
+      "Part-time",
+      "Contract",
+      "Internship",
+    ];
+
+    const validOfferTypes = ["withPF", "withoutPF"];
+
+    if (!validEmploymentTypes.includes(employmentType)) {
+      throw new AppError("Invalid employmentType value", 400);
+    }
+
+    if (!validOfferTypes.includes(offerType)) {
+      throw new AppError("Invalid offerType value", 400);
+    }
+
+    // ================= NORMALIZE DATA =================
     const cleanCompany = company.trim();
 
-    // ✅ Generate employeeId
-    const employeeId = await getOrCreateEmployeeId(
-      employeeEmail,
-      cleanCompany
-    );
+    // ================= SAFE DATE CONVERSION =================
+    let parsedJoiningDate, parsedOfferValidTill, parsedIssueDate;
 
-    // ✅ Duplicate check
+    try {
+      parsedJoiningDate = new Date(joiningDate);
+      parsedOfferValidTill = new Date(offerValidTill);
+      parsedIssueDate = new Date(issueDate);
+
+      if (
+        isNaN(parsedJoiningDate) ||
+        isNaN(parsedOfferValidTill) ||
+        isNaN(parsedIssueDate)
+      ) {
+        throw new Error("Invalid date format");
+      }
+    } catch (err) {
+      throw new AppError("Invalid date format provided", 400);
+    }
+
+    // ================= EMPLOYEE ID =================
+    let employeeId;
+
+    try {
+      employeeId = await getOrCreateEmployeeId(
+        employeeEmail,
+        cleanCompany
+      );
+    } catch (err) {
+      console.error("❌ Employee ID ERROR:", err);
+      throw new AppError("Failed to generate employee ID", 500);
+    }
+
+    console.log("🆔 Employee ID:", employeeId);
+
+    // ================= DUPLICATE CHECK =================
     const exists = await OfferLetter.findOne({
       employeeEmail,
       company: cleanCompany,
-      joiningDate,
+      joiningDate: parsedJoiningDate,
     });
 
     if (exists) {
@@ -102,44 +152,52 @@ export const createOfferLetter = async (req, res, next) => {
       );
     }
 
-    // ✅ Generate document number
+    // ================= DOCUMENT NUMBER =================
     const documentNumber = `OL-${employeeId}-${Date.now()}`;
+    console.log("📄 Document Number:", documentNumber);
 
-    // ✅ Create document (explicit fields only)
-    const letter = await OfferLetter.create({
-      company: cleanCompany,
-      issuedTo,
-      title,
-      employeeName,
-      employeeNumber,
-      employeeEmail,
-      position,
-      department,
-      employmentType,
-      joiningDate,
-      probationPeriod,
-      salary,
-      location,
-      workHours,
-      reportingManager,
-      offerValidTill,
-      offerType,
-      issueDate,
-      issuedBy,
-      employeeId,
-      documentNumber,
-    });
+    // ================= CREATE =================
+    let letter;
 
-    // ✅ Populate issuedBy name
+    try {
+      letter = await OfferLetter.create({
+        company: cleanCompany,
+        issuedTo,
+        title,
+        employeeName,
+        employeeNumber,
+        employeeEmail,
+        position,
+        department,
+        employmentType,
+        joiningDate: parsedJoiningDate,
+        probationPeriod,
+        salary,
+        location,
+        workHours,
+        reportingManager,
+        offerValidTill: parsedOfferValidTill,
+        offerType,
+        issueDate: parsedIssueDate,
+        issuedBy,
+        employeeId,
+        documentNumber,
+      });
+    } catch (err) {
+      console.error("❌ MONGODB SAVE ERROR:", err);
+      throw new AppError("Database error while creating offer letter", 500);
+    }
+
+    // ================= POPULATE =================
     const populatedLetter = await OfferLetter.findById(letter._id)
       .populate("issuedBy", "name");
 
-    // ✅ Clean response
     const finalResponse = {
       ...populatedLetter.toObject(),
-      issuedBy: populatedLetter.issuedBy.name,
+      issuedBy: populatedLetter.issuedBy?.name || "Unknown",
     };
 
+    // ================= RESPONSE =================
     return sendResponse(
       res,
       201,
@@ -148,9 +206,11 @@ export const createOfferLetter = async (req, res, next) => {
     );
 
   } catch (error) {
+    console.error("🔥 FINAL ERROR:", error);
     next(error);
   }
 };
+
 /* ================= READ ALL ================= */
 export const getAllOfferLetters = async (req, res, next) => {
   try {
