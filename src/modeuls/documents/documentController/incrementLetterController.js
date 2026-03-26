@@ -46,7 +46,7 @@ export const createIncrementLetter = async (req, res, next) => {
       "employeeName",
       "employeeNumber",
       "employeeEmail",
-      "designation",
+      // "designation",
       "performanceYear",
       "newCTC",
       "effectiveDate",

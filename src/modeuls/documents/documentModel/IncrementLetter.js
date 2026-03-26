@@ -5,7 +5,7 @@ const incrementLetterSchema = new mongoose.Schema({
  
   designation: {
     type: String,
-    required: true,
+    required: false,
   },
 
   department: {
