@@ -147,6 +147,7 @@ export const createCompletionCertificate = async (req, res, next) => {
     );
 
   } catch (error) {
+    console.error("🔥 COMPLETION ERROR:", error);
     next(error);
   }
 };

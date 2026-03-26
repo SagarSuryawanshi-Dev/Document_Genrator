@@ -3,7 +3,7 @@
   "Devcons Software Solutions Pvt. Ltd.": "DCS",
   "Penta Software Consultancy Services (I) Pvt Ltd": "PSS",
   "Cubeage Technologies Services Pvt. Ltd.": "CTS",
-  "Quick Management Service Pvt. Ltd.": "QMS",
+  "Quick Management Services": "QMS",
   "Neweage Cloud Solution Pvt. Ltd.": "NCS",
   "RP Business Solutions LLP": "RBS",
   "JDIT Software Solutions Pvt. Ltd.": "JDT",
