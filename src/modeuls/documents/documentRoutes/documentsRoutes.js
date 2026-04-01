@@ -9,7 +9,11 @@ import offerLetterRoutes from "./offerLetterRoutes.js";
 import relievingLetterRoutes from "./relievingLetterRoutes.js";
 import internshipCertificateRoutes from "./internshipCertificateRoutes.js";
 import salarySlipRoutes from "./salarySlipRoutes.js";
-import getAllDocuments from "../documentController/getAllDocumentsController.js"
+import {
+  getAllDocuments,
+  getEmployeesList,
+  getDocumentsByEmployee
+} from "../documentController/getAllDocumentsController.js";
 
 const docRoutes = express.Router();
 
@@ -24,5 +28,7 @@ docRoutes.use("/relieving_letter",relievingLetterRoutes)
 docRoutes.use("/internshipcertificate_letter",internshipCertificateRoutes)
 docRoutes.use("/salaryslip_letter",salarySlipRoutes)
 docRoutes.get("/getalldoc",getAllDocuments)
+docRoutes.get("/employeelist",getEmployeesList)
+docRoutes.get("/getdocbyempid/:employeeId",getDocumentsByEmployee)
 
 export default docRoutes;
