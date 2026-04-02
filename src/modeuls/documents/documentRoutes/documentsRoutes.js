@@ -14,6 +14,7 @@ import {
   getEmployeesList,
   getDocumentsByEmployee
 } from "../documentController/getAllDocumentsController.js";
+import exportUsersToExcel from "../documentController/downloadExcelController.js"
 
 const docRoutes = express.Router();
 
@@ -30,5 +31,6 @@ docRoutes.use("/salaryslip_letter",salarySlipRoutes)
 docRoutes.get("/getalldoc",getAllDocuments)
 docRoutes.get("/employeelist",getEmployeesList)
 docRoutes.get("/getdocbyempid/:employeeId",getDocumentsByEmployee)
+docRoutes.get("/export/excel", exportUsersToExcel)
 
 export default docRoutes;
