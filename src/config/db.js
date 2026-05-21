@@ -7,6 +7,19 @@ const dbConnection = async () => {
 
     const collection = mongoose.connection.collection("documents");
 
+    // 🔍 Print all indexes (VERY IMPORTANT for debugging)
+    const indexes = await collection.indexes();
+    console.log("📌 Existing Indexes:", indexes);
+
+    // ❌ Drop OLD employeeId unique index (THIS is your real problem)
+    try {
+      await collection.dropIndex("employeeId_1");
+      console.log("✅ Dropped employeeId_1 index");
+    } catch (err) {
+      console.log("⚠️ employeeId_1 index not found");
+    }
+
+    // (Optional cleanup - keep your old ones if needed)
     try {
       await collection.dropIndex("company_1_employeeName_1_joiningDate_1");
       console.log("✅ Dropped employeeName index");

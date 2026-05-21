@@ -1,5 +1,3 @@
-
-
 import mongoose from "mongoose";
 
 const options = {
@@ -26,16 +24,20 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
     employeeEmail: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      lowercase: true, // ✅ better consistency
     },
+
     employeeNumber: {
       type: String,
       required: true,
-      trim:true
+      trim: true,
     },
+
     company: {
       type: String,
       required: true,
@@ -59,27 +61,32 @@ const baseDocumentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
     issuedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
+
     documentNumber: {
       type: String,
       trim: true,
     },
+
     paymentStatus: {
       type: String,
       enum: ["Paid", "Pending"],
       default: "Pending",
-      required:true
-    }
-
+      required: true,
+    },
   },
-  options,
+  options
 );
 
-// 🔐 UNIQUE documentNumber ONLY when exists
+
+// ================= INDEXES =================
+
+// ✅ 1. Unique documentNumber (ONLY when present)
 baseDocumentSchema.index(
   { documentNumber: 1 },
   {
@@ -87,12 +94,23 @@ baseDocumentSchema.index(
     partialFilterExpression: {
       documentNumber: { $exists: true, $ne: null },
     },
-  },
+  }
 );
+
+// ✅ 2. Fast filtering (search optimization)
 baseDocumentSchema.index({
   employeeEmail: 1,
   company: 1,
 });
+
+// ✅ 3. 🔥 CRITICAL: Prevent duplicate document per employee per type
+baseDocumentSchema.index(
+  { employeeId: 1, documentType: 1 },
+  { unique: true }
+);
+
+
+// ================= MODEL =================
 
 const Document = mongoose.model("Document", baseDocumentSchema);
 

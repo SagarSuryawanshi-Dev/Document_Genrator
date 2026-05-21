@@ -139,6 +139,26 @@ export const createOfferLetter = async (req, res, next) => {
     console.log("🆔 Employee ID:", employeeId);
 
     // ================= DUPLICATE CHECK =================
+    // const exists = await OfferLetter.findOne({
+    //   employeeEmail,
+    //   company: cleanCompany,
+    //   joiningDate: parsedJoiningDate,
+    // });
+
+    // if (exists) {
+    //   throw new AppError(
+    //     "Offer letter already exists for this candidate and joining date",
+    //     409
+    //   );
+    // }
+
+    // ================= DOCUMENT NUMBER =================
+    const documentNumber = `OL-${employeeId}-${Date.now()}`;
+    console.log("📄 Document Number:", documentNumber);
+
+    // ================= DUPLICATE CHECK =================
+    let letter;
+
     const exists = await OfferLetter.findOne({
       employeeEmail,
       company: cleanCompany,
@@ -146,20 +166,15 @@ export const createOfferLetter = async (req, res, next) => {
     });
 
     if (exists) {
-      throw new AppError(
-        "Offer letter already exists for this candidate and joining date",
-        409
-      );
-    }
+      console.log("⚠️ Existing offer letter found, reusing it");
 
-    // ================= DOCUMENT NUMBER =================
-    const documentNumber = `OL-${employeeId}-${Date.now()}`;
-    console.log("📄 Document Number:", documentNumber);
+      letter = exists; // ✅ reuse existing record
 
-    // ================= CREATE =================
-    let letter;
+    } else {
+      console.log("✅ No existing record, creating new one");
 
-    try {
+      const documentNumber = `OL-${employeeId}-${Date.now()}`;
+
       letter = await OfferLetter.create({
         company: cleanCompany,
         issuedTo,
@@ -183,11 +198,7 @@ export const createOfferLetter = async (req, res, next) => {
         employeeId,
         documentNumber,
       });
-    } catch (err) {
-      console.error("❌ MONGODB SAVE ERROR:", err);
-      throw new AppError("Database error while creating offer letter", 500);
     }
-
     // ================= POPULATE =================
     const populatedLetter = await OfferLetter.findById(letter._id)
       .populate("issuedBy", "name");

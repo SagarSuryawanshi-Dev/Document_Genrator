@@ -3,7 +3,6 @@ import sendResponse from "../utlis/apiResponse.js";
 import User from "../user/user.Schema.js";
 import bcrypt from "bcrypt";
 
-
 export const Signup = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
