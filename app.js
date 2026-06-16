@@ -14,9 +14,20 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // ← ADD THIS LINE (before routes!)
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://doc-gen-frontend-flame.vercel.app"
+];
+
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174", "https://doc-gen-frontend-flame.vercel.app/"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
 
