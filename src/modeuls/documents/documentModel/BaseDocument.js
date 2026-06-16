@@ -109,7 +109,6 @@ baseDocumentSchema.index(
   { unique: true }
 );
 
-
 // ================= MODEL =================
 
 const Document = mongoose.model("Document", baseDocumentSchema);
