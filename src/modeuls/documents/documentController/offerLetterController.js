@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 export const createOfferLetter = async (req, res, next) => {
   try {
     const body = req.body;
-
+    console.log("🚀 Received create offer letter request:", body);
     // ================= AUTH CHECK =================
     if (!req.user) {
       throw new AppError("User not authenticated", 401);

@@ -23,9 +23,11 @@ export const protect = async (req, res, next) => {
 
     //  Verify token
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    console.log("Decoded JWT:", decoded);
 
     //  Get user from DB
     const user = await User.findById(decoded.id).select("-password");
+    console.log("User Found:", user);
 
     if (!user) {
       return next(new AppError("User no longer exists", 401));
